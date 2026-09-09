@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
@@ -15,6 +15,11 @@ namespace WeaponPaints
 		private void GivePlayerWeaponSkin(CCSPlayerController player, CBasePlayerWeapon weapon)
 		{
 			if (!Config.Additional.SkinEnabled) return;
+			if (player.IsBot) return;
+			// Never re-skin a weapon that provably belongs to someone else (picked up
+			// from a bot / another player). Weapons whose original owner is unknown
+			// (not yet recorded by the engine at give time) are still allowed.
+			if (IsWeaponOwnerForeign(player, weapon)) return;
 
 			bool isKnife = weapon.DesignerName.Contains("knife") || weapon.DesignerName.Contains("bayonet");
 
@@ -262,10 +267,10 @@ namespace WeaponPaints
 			return false;
 		}
 
-		private void RefreshWeapons(CCSPlayerController? player)
+		private void RefreshWeapons(CCSPlayerController? player, bool keepForeignSkins = false)
 		{
 			if (!_gBCommandsAllowed) return;
-			if (player == null || !player.IsValid || player.PlayerPawn.Value == null || (LifeState_t)player.LifeState != LifeState_t.LIFE_ALIVE)
+			if (player == null || !player.IsValid || player.IsBot || player.PlayerPawn.Value == null || (LifeState_t)player.LifeState != LifeState_t.LIFE_ALIVE)
 				return;
 			if (player.PlayerPawn.Value.WeaponServices == null || player.PlayerPawn.Value.ItemServices == null)
 				return;
@@ -299,6 +304,13 @@ namespace WeaponPaints
 					CCSWeaponBaseVData? weaponData = weapon.Value.As<CCSWeaponBase>().VData;
 
 					if (weaponData == null) continue;
+
+					// Only refresh weapons this player originally owns. Weapons picked
+					// up from a bot / another player (or carried over, whose owner was
+					// cleared by the engine at the round boundary) are NOT owned by
+					// this player: leave them alone so they never get re-skinned into
+					// this player's own config.
+					if (keepForeignSkins && !IsPlayerOwnedWeapon(player, weapon.Value)) continue;
 
 					if (weaponData.GearSlot is gear_slot_t.GEAR_SLOT_RIFLE or gear_slot_t.GEAR_SLOT_PISTOL)
 					{
@@ -536,7 +548,33 @@ namespace WeaponPaints
 			knifeValue = value; // Assign the knife value to the out parameter
 			return true;
 		}
-		
+
+		// True when this weapon's original owner is this player's own SteamID.
+		// Weapons the engine/plugins freshly give to a player carry the player's
+		// Xuid in OriginalOwnerXuid*; anything else (picked up from a bot/another
+		// player, or carried-over leftovers whose owner was cleared at the round
+		// boundary) does not and must never be re-skinned into the player's config.
+		private static bool IsPlayerOwnedWeapon(CCSPlayerController player, CBasePlayerWeapon weapon)
+		{
+			ulong steamId = (ulong)player.SteamID;
+
+			return weapon.OriginalOwnerXuidLow == (uint)(steamId & 0xFFFFFFFF) &&
+			       weapon.OriginalOwnerXuidHigh == (uint)(steamId >> 32);
+		}
+
+		// True when the weapon provably belongs to a different player (its original
+		// owner is recorded and is not this player). An unknown/zero owner is not
+		// treated as foreign here: the engine may not have recorded the owner yet
+		// when the weapon was just given.
+		private static bool IsWeaponOwnerForeign(CCSPlayerController player, CBasePlayerWeapon weapon)
+		{
+			ulong owner = ((ulong)weapon.OriginalOwnerXuidHigh << 32) | weapon.OriginalOwnerXuidLow;
+
+			if (owner == 0) return false;
+
+			return owner != (ulong)player.SteamID;
+		}
+
 		private static bool HasChangedPaint(CCSPlayerController player, int weaponDefIndex, out WeaponInfo? weaponInfo)
 		{
 			weaponInfo = null;
