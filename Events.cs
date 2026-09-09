@@ -94,7 +94,9 @@ namespace WeaponPaints
 		{
 			CCSPlayerController? player = @event.Userid;
 
-			if (player is null || !player.IsValid || Config.Additional is { KnifeEnabled: false, GloveEnabled: false })
+			// Bots are owned by BotRandomizer — WeaponPaints must never touch them
+			// (skinning, killing or re-giving bot weapons resets their knife skins).
+			if (player is null || !player.IsValid || player.IsBot || Config.Additional is { KnifeEnabled: false, GloveEnabled: false })
 				return HookResult.Continue;
 
 			CCSPlayerPawn? pawn = player.PlayerPawn.Value;
@@ -102,12 +104,14 @@ namespace WeaponPaints
 			if (pawn == null || !pawn.IsValid)
 				return HookResult.Continue;
 
-			// Apply gloves and refresh weapons (knife change) on spawn
+			// Apply gloves and refresh weapons (knife change) on spawn.
+			// keepForeignSkins=true: weapons that were not freshly owned by this
+			// player this round (picked up / carried over) are left untouched.
 			Server.NextFrame(() =>
 			{
 				GivePlayerGloves(player);
 			});
-			AddTimer(0.3f, () => RefreshWeapons(player));
+			AddTimer(0.3f, () => RefreshWeapons(player, keepForeignSkins: true));
 
 			return HookResult.Continue;
 		}
