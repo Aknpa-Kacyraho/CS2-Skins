@@ -47,7 +47,15 @@ public class Storage
                 var dir = Path.GetDirectoryName(_filePath);
                 if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
-                File.WriteAllText(_filePath, json);
+
+                // Atomic write: never leave a truncated player_data.json behind if
+                // the process dies mid-save (that would wipe every player's skins).
+                var tempPath = _filePath + ".tmp";
+                File.WriteAllText(tempPath, json);
+                if (File.Exists(_filePath))
+                    File.Replace(tempPath, _filePath, null);
+                else
+                    File.Move(tempPath, _filePath);
             }
         }
         catch (Exception ex)

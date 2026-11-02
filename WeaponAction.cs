@@ -348,6 +348,7 @@ namespace WeaponPaints
 			AddTimer(0.23f, () =>
 					{
 						if (!_gBCommandsAllowed) return;
+						if (!Utility.IsPlayerValid(player)) return;
 
 						if (!PlayerHasKnife(player) && hasKnife)
 						{
@@ -375,11 +376,14 @@ namespace WeaponPaints
 						{
 							foreach (var ammo in entry.Value)
 							{
-								var newWeapon = new CBasePlayerWeapon(player.GiveNamedItem(entry.Key));
+								var itemHandle = player.GiveNamedItem(entry.Key);
+								if (itemHandle == 0) continue;
+								var newWeapon = new CBasePlayerWeapon(itemHandle);
 								Server.NextFrame(() =>
 						{
 							try
 							{
+								if (!newWeapon.IsValid) return;
 								newWeapon.Clip1 = ammo.Item1;
 								newWeapon.ReserveAmmo[0] = ammo.Item2;
 
@@ -444,8 +448,17 @@ namespace WeaponPaints
 				
 					//force gloves model refresh to prevent model overlap
 					player.ExecuteClientCommand("lastinv");
-					SetBodygroup(pawn, "first_or_third_person", 0);
-					AddTimer(0.2f, () => SetBodygroup(pawn, "first_or_third_person", 1), TimerFlags.STOP_ON_MAPCHANGE);
+					if (pawn.IsValid)
+					{
+						SetBodygroup(pawn, "first_or_third_person", 0);
+						AddTimer(0.2f, () =>
+						{
+							if (!player.IsValid) return;
+							var current = player.PlayerPawn?.Value;
+							if (current == null || !current.IsValid) return;
+							SetBodygroup(current, "first_or_third_person", 1);
+						}, TimerFlags.STOP_ON_MAPCHANGE);
+					}
 				}
 				catch (Exception) { }
 			}, TimerFlags.STOP_ON_MAPCHANGE);

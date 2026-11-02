@@ -16,7 +16,7 @@ public partial class WeaponPaints : BasePlugin, IPluginConfig<WeaponPaintsConfig
 	public override string ModuleAuthor => "Nereziel & daffyy";
 	public override string ModuleDescription => "Skin, gloves, and knife selector with auto-save";
 	public override string ModuleName => "WeaponPaints";
-	public override string ModuleVersion => "3.3a";
+	public override string ModuleVersion => "3.3b";
 
 	public override void Load(bool hotReload)
 	{

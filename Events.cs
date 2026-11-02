@@ -177,8 +177,15 @@ namespace WeaponPaints
 						}
 						else
 						{
-							CCSWeaponBaseGun gun = weapon.As<CCSWeaponBaseGun>();
-							player = Utilities.GetPlayerFromIndex((int)weapon.OwnerEntity.Index) ?? Utilities.GetPlayerFromIndex((int)gun.OwnerEntity.Value!.Index);
+							player = null;
+							if (weapon.OwnerEntity.IsValid)
+								player = Utilities.GetPlayerFromIndex((int)weapon.OwnerEntity.Index);
+							if (player == null)
+							{
+								var gun = weapon.As<CCSWeaponBaseGun>();
+								if (gun != null && gun.OwnerEntity.IsValid && gun.OwnerEntity.Value != null)
+									player = Utilities.GetPlayerFromIndex((int)gun.OwnerEntity.Value.Index);
+							}
 						}
 
 						if (string.IsNullOrEmpty(player?.PlayerName)) return;
