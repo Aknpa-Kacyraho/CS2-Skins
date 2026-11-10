@@ -335,8 +335,14 @@ namespace WeaponPaints
 
 					if (weaponData.GearSlot == gear_slot_t.GEAR_SLOT_KNIFE)
 					{
-						weapon.Value?.AddEntityIOEvent("Kill", weapon.Value, null, "", 0.1f);
-						hasKnife = true;
+						// Only touch the knife when the knife feature is enabled. With it
+						// disabled we must leave the engine-issued knife alone, otherwise
+						// the knife is killed and never re-issued (no knife at spawn).
+						if (_config.Additional.KnifeEnabled)
+						{
+							weapon.Value?.AddEntityIOEvent("Kill", weapon.Value, null, "", 0.1f);
+							hasKnife = true;
+						}
 					}
 				}
 				catch (Exception ex)
@@ -345,33 +351,38 @@ namespace WeaponPaints
 				}
 			}
 
-			AddTimer(0.23f, () =>
+			AddTimer(0.35f, () =>
 					{
-						if (!_gBCommandsAllowed) return;
 						if (!Utility.IsPlayerValid(player)) return;
 
-						if (!PlayerHasKnife(player) && hasKnife)
+						// Re-issue the knife unconditionally when we killed it: the knife has
+						// already been removed, so this must not depend on round state
+						// (_gBCommandsAllowed) or a single GiveNamedItem call succeeding.
+						if (hasKnife && !PlayerHasKnife(player))
 						{
-							var newKnife = new CBasePlayerWeapon(player.GiveNamedItem(CsItem.Knife));
-							var newWeapon = new CBasePlayerWeapon(player.GiveNamedItem(CsItem.USP));
 							player.GiveNamedItem(CsItem.Knife);
+							Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInventoryServices");
 							player.ExecuteClientCommand("slot3");
 
 							Server.NextFrame(() =>
 							{
 								try
 								{
-									if (newKnife != null && newKnife.IsValid)
-										newKnife.AddEntityIOEvent("Kill", newKnife, null, "", 0.01f);
-									if (newWeapon != null && newWeapon.IsValid)
-										newWeapon.AddEntityIOEvent("Kill", newWeapon, null, "", 0.01f);
+									if (!Utility.IsPlayerValid(player)) return;
+									if (PlayerHasKnife(player)) return;
+									player.GiveNamedItem(CsItem.Knife);
+									Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInventoryServices");
+									player.ExecuteClientCommand("slot3");
 								}
 								catch (Exception ex)
 								{
-									Logger.LogWarning("Error AddEntityIOEvent " + ex.Message);
+									Logger.LogWarning("Error re-issuing knife: " + ex.Message);
 								}
 							});
 						}
+
+						if (!_gBCommandsAllowed) return;
+
 						foreach (var entry in weaponsWithAmmo)
 						{
 							foreach (var ammo in entry.Value)
