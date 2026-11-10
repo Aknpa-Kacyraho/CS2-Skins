@@ -33,25 +33,65 @@ namespace WeaponPaints
 
 				case true:
 				{
+					// Knife model/paint, following the production-validated approach in
+					// Nereziel/cs2-WeaponPaints Issue #531 and cs2-store's SetSubclass():
+					//   A) set definition index / quality in place first,
+					//   B) defer ChangeSubclass (~0.08s) with the weapon as activator,
+					//   C) apply the paint only after the subclass change,
+					//   D) never Kill / RemovePlayerItem (that drops the knife as a prop).
 					var newDefIndex = WeaponDefindexList.FirstOrDefault(x => x.Value == GPlayersKnife[player.Slot][player.Team]);
 					if (newDefIndex.Key == 0) return;
+					ushort target = (ushort)newDefIndex.Key;
 
-					if (weapon.AttributeManager.Item.ItemDefinitionIndex != newDefIndex.Key)
-					{
-						SubclassChange(weapon, (ushort)newDefIndex.Key);
-					}
-
-					weapon.AttributeManager.Item.ItemDefinitionIndex = (ushort)newDefIndex.Key;
+					weapon.AttributeManager.Item.ItemDefinitionIndex = target;
 					weapon.AttributeManager.Item.EntityQuality = 3;
-					
 					weapon.AttributeManager.Item.AttributeList.Attributes.RemoveAll();
 					weapon.AttributeManager.Item.NetworkedDynamicAttributes.Attributes.RemoveAll();
-					break;
+
+					nint knifeHandle = weapon.Handle;
+					AddTimer(0.08f, () =>
+					{
+						var knife = new CBasePlayerWeapon(knifeHandle);
+						if (!knife.IsValid) return;
+						try
+						{
+							knife.InitiallyPopulateInterpHistory = true;
+							knife.AcceptInput("ChangeSubclass", knife, knife, target.ToString());
+						}
+						catch (Exception ex)
+						{
+							Logger.LogWarning($"Knife ChangeSubclass {target} failed: {ex.Message}");
+						}
+
+						Server.NextWorldUpdate(() =>
+						{
+							var painted = new CBasePlayerWeapon(knifeHandle);
+							if (painted.IsValid)
+								ApplyWeaponPaint(player, painted);
+						});
+					}, TimerFlags.STOP_ON_MAPCHANGE);
+					return;
 				}
 				default:
+				{
 					weapon.AttributeManager.Item.EntityQuality = 0;
-					break;
+					ApplyWeaponPaint(player, weapon);
+					return;
+				}
 			}
+		}
+
+		/// <summary>
+		/// Applies paint/seed/wear/keychain/stickers/nametag to a weapon. Split out of
+		/// <see cref="GivePlayerWeaponSkin"/> so the knife path can call it one frame
+		/// AFTER ChangeSubclass (painting in the same tick as the subclass change left
+		/// the model correct but the default texture — Issue #531).
+		/// </summary>
+		private void ApplyWeaponPaint(CCSPlayerController player, CBasePlayerWeapon weapon)
+		{
+			if (!Config.Additional.SkinEnabled || player == null || !player.IsValid || player.IsBot) return;
+			if (weapon == null || !weapon.IsValid) return;
+			if (IsWeaponOwnerForeign(player, weapon)) return;
 
 			UpdatePlayerEconItemId(weapon.AttributeManager.Item);
 
@@ -330,19 +370,19 @@ namespace WeaponPaints
 
 						if (gun.VData == null) return;
 						
-						weapon.Value?.AddEntityIOEvent("Kill", weapon.Value, null, "", 0.1f);
+						// 2026-11-10: EntityIO "Kill" can drop the weapon as a world prop on
+						// 1.41.9.6. Remove the entity directly instead; the replacement is
+						// issued 0.35s later, so no same-frame slot reuse.
+						weapon.Value?.Remove();
 					}
 
 					if (weaponData.GearSlot == gear_slot_t.GEAR_SLOT_KNIFE)
 					{
-						// Only touch the knife when the knife feature is enabled. With it
-						// disabled we must leave the engine-issued knife alone, otherwise
-						// the knife is killed and never re-issued (no knife at spawn).
-						if (_config.Additional.KnifeEnabled)
-						{
-							weapon.Value?.AddEntityIOEvent("Kill", weapon.Value, null, "", 0.1f);
-							hasKnife = true;
-						}
+						// 2026-11-10: on CS2 1.41.9.6 the AddTimer / EntityIO ordering used
+						// to "kill old knife + re-issue" is unreliable — the knife got
+						// killed but never re-issued, so nobody (including bots) had a
+						// knife at spawn. Never kill the knife here; knife model/paint is
+						// applied by GivePlayerWeaponSkin on the weapon-created hook.
 					}
 				}
 				catch (Exception ex)
@@ -496,7 +536,20 @@ namespace WeaponPaints
 		//xstage idea on css discord
 		public static void SubclassChange(CBasePlayerWeapon weapon, ushort itemD)
 		{
-			weapon.AcceptInput("ChangeSubclass", value: itemD.ToString());
+			if (weapon == null || !weapon.IsValid) return;
+			try
+			{
+				// CS2 1.41.9.6: ChangeSubclass must carry the weapon as activator/caller,
+				// otherwise the entity is turned into an unpickable world prop (knife on
+				// the ground, shootable, cannot be picked up). Mirrors cs2-store's
+				// Weapon.SetSubclass(): InitiallyPopulateInterpHistory + self activator.
+				weapon.InitiallyPopulateInterpHistory = true;
+				weapon.AcceptInput("ChangeSubclass", weapon, weapon, itemD.ToString());
+			}
+			catch (Exception ex)
+			{
+				Instance?.Logger.LogWarning($"ChangeSubclass {itemD} failed: {ex.Message}");
+			}
 		}
 
 		public static void SetBodygroup(CCSPlayerPawn pawn, string group, int value)
@@ -531,15 +584,12 @@ namespace WeaponPaints
 				var weapon = handle.Value;
 			
 				if (weapon == null || !weapon.IsValid) continue;
-				if (myWeapons.Count == 1)
-				{
-					var newWeapon = new CBasePlayerWeapon(player.GiveNamedItem(CsItem.USP));
-					weapon.AddEntityIOEvent("Kill", weapon, null, "", 0.01f);
-					player.GiveNamedItem(CsItem.Knife);
-					player.ExecuteClientCommand("slot3");
-					newWeapon.AddEntityIOEvent("Kill", newWeapon, null, "", 0.01f);
-				}
-					
+
+				// 2026-11-10 P0: On CS2 1.41.9.6, AddEntityIOEvent("Kill") on a weapon
+				// drops it as an unpickable world prop (the "knife lies on the ground
+				// with collision" symptom) instead of removing it. This path fires on
+				// spawn when only the knife is present, so the engine knife was being
+				// converted into a prop every round. Never kill/re-give weapons here.
 				GivePlayerWeaponSkin(player, weapon);
 			}
 		}
