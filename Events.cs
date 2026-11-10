@@ -104,14 +104,15 @@ namespace WeaponPaints
 			if (pawn == null || !pawn.IsValid)
 				return HookResult.Continue;
 
-			// Apply gloves and refresh weapons (knife change) on spawn.
-			// keepForeignSkins=true: weapons that were not freshly owned by this
-			// player this round (picked up / carried over) are left untouched.
+			// Apply gloves on spawn. Weapon skins (including the knife model/paint)
+			// are applied by the weapon-created hook (OnGiveNamedItemPost) when the
+			// engine actually issues the weapon; do NOT re-issue weapons on spawn —
+			// removing/re-giving in that window caused
+			// "FATAL ERROR: CopyExistingEntity: missing client entity N".
 			Server.NextFrame(() =>
 			{
 				GivePlayerGloves(player);
 			});
-			AddTimer(0.3f, () => RefreshWeapons(player, keepForeignSkins: true));
 
 			return HookResult.Continue;
 		}

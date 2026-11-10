@@ -33,43 +33,14 @@ namespace WeaponPaints
 
 				case true:
 				{
-					// Knife model/paint, following the production-validated approach in
-					// Nereziel/cs2-WeaponPaints Issue #531 and cs2-store's SetSubclass():
-					//   A) set definition index / quality in place first,
-					//   B) defer ChangeSubclass (~0.08s) with the weapon as activator,
-					//   C) apply the paint only after the subclass change,
-					//   D) never Kill / RemovePlayerItem (that drops the knife as a prop).
-					var newDefIndex = WeaponDefindexList.FirstOrDefault(x => x.Value == GPlayersKnife[player.Slot][player.Team]);
-					if (newDefIndex.Key == 0) return;
-					ushort target = (ushort)newDefIndex.Key;
-
-					weapon.AttributeManager.Item.ItemDefinitionIndex = target;
-					weapon.AttributeManager.Item.EntityQuality = 3;
-					weapon.AttributeManager.Item.AttributeList.Attributes.RemoveAll();
-					weapon.AttributeManager.Item.NetworkedDynamicAttributes.Attributes.RemoveAll();
-
-					nint knifeHandle = weapon.Handle;
-					AddTimer(0.08f, () =>
-					{
-						var knife = new CBasePlayerWeapon(knifeHandle);
-						if (!knife.IsValid) return;
-						try
-						{
-							knife.InitiallyPopulateInterpHistory = true;
-							knife.AcceptInput("ChangeSubclass", knife, knife, target.ToString());
-						}
-						catch (Exception ex)
-						{
-							Logger.LogWarning($"Knife ChangeSubclass {target} failed: {ex.Message}");
-						}
-
-						Server.NextWorldUpdate(() =>
-						{
-							var painted = new CBasePlayerWeapon(knifeHandle);
-							if (painted.IsValid)
-								ApplyWeaponPaint(player, painted);
-						});
-					}, TimerFlags.STOP_ON_MAPCHANGE);
+					// 2026-11-10: CS2 1.41.9.6 + CounterStrikeSharp 1.0.379 is not
+					// compatible with the knife subclass switch yet. Even the
+					// production-validated recipe (Issue #531: deferred ChangeSubclass
+					// + deferred paint, no Kill) makes the knife disappear / turns it
+					// into an unpickable prop on this build. Until CSS ships a build
+					// for 1.41.9.6, leave the engine-issued knife completely untouched:
+					// players keep a working default knife (no custom knife model/paint).
+					// GPlayersKnife data is preserved for when this can be restored.
 					return;
 				}
 				default:
@@ -322,132 +293,30 @@ namespace WeaponPaints
 			if (player.Team is CsTeam.None or CsTeam.Spectator)
 				return;
 
-			var hasKnife = false;
-			
-			Dictionary<string, List<(int, int)>> weaponsWithAmmo = [];
-
+			// 2026-11-10 P0: never remove / re-issue weapons here.
+			// Removing a weapon and re-giving it in the same window recycles the
+			// entity slot before the client deletes it, which produces
+			// "FATAL ERROR: CopyExistingEntity: missing client entity N" (and also
+			// turned the knife into an unpickable world prop). Refresh only
+			// re-applies model/paint to weapons that already exist.
 			foreach (var weapon in weapons)
 			{
-				if (!weapon.IsValid || weapon.Value == null ||
-					!weapon.Value.IsValid || !weapon.Value.DesignerName.Contains("weapon_"))
+				if (!weapon.IsValid || weapon.Value == null || !weapon.Value.IsValid)
 					continue;
-				
-				CCSWeaponBaseGun gun = weapon.Value.As<CCSWeaponBaseGun>();
-
-				if (weapon.Value.Entity == null) continue;
-				if (!weapon.Value.OwnerEntity.IsValid) continue;
-				if (gun.Entity == null) continue;
-				if (!gun.IsValid) continue;
+				if (!weapon.Value.DesignerName.Contains("weapon_"))
+					continue;
+				if (keepForeignSkins && !IsPlayerOwnedWeapon(player, weapon.Value))
+					continue;
 
 				try
 				{
-					CCSWeaponBaseVData? weaponData = weapon.Value.As<CCSWeaponBase>().VData;
-
-					if (weaponData == null) continue;
-
-					// Only refresh weapons this player originally owns. Weapons picked
-					// up from a bot / another player (or carried over, whose owner was
-					// cleared by the engine at the round boundary) are NOT owned by
-					// this player: leave them alone so they never get re-skinned into
-					// this player's own config.
-					if (keepForeignSkins && !IsPlayerOwnedWeapon(player, weapon.Value)) continue;
-
-					if (weaponData.GearSlot is gear_slot_t.GEAR_SLOT_RIFLE or gear_slot_t.GEAR_SLOT_PISTOL)
-					{
-						if (!WeaponDefindexList.TryGetValue(weapon.Value.AttributeManager.Item.ItemDefinitionIndex, out var weaponByDefindex))
-							continue;
-
-						int clip1 = weapon.Value.Clip1;
-						int reservedAmmo = weapon.Value.ReserveAmmo[0];
-
-						if (!weaponsWithAmmo.TryGetValue(weaponByDefindex, out var value))
-						{
-							value = [];
-							weaponsWithAmmo.Add(weaponByDefindex, value);
-						}
-
-						value.Add((clip1, reservedAmmo));
-
-						if (gun.VData == null) return;
-						
-						// 2026-11-10: EntityIO "Kill" can drop the weapon as a world prop on
-						// 1.41.9.6. Remove the entity directly instead; the replacement is
-						// issued 0.35s later, so no same-frame slot reuse.
-						weapon.Value?.Remove();
-					}
-
-					if (weaponData.GearSlot == gear_slot_t.GEAR_SLOT_KNIFE)
-					{
-						// 2026-11-10: on CS2 1.41.9.6 the AddTimer / EntityIO ordering used
-						// to "kill old knife + re-issue" is unreliable — the knife got
-						// killed but never re-issued, so nobody (including bots) had a
-						// knife at spawn. Never kill the knife here; knife model/paint is
-						// applied by GivePlayerWeaponSkin on the weapon-created hook.
-					}
+					GivePlayerWeaponSkin(player, weapon.Value);
 				}
 				catch (Exception ex)
 				{
 					Logger.LogWarning(ex.Message);
 				}
 			}
-
-			AddTimer(0.35f, () =>
-					{
-						if (!Utility.IsPlayerValid(player)) return;
-
-						// Re-issue the knife unconditionally when we killed it: the knife has
-						// already been removed, so this must not depend on round state
-						// (_gBCommandsAllowed) or a single GiveNamedItem call succeeding.
-						if (hasKnife && !PlayerHasKnife(player))
-						{
-							player.GiveNamedItem(CsItem.Knife);
-							Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInventoryServices");
-							player.ExecuteClientCommand("slot3");
-
-							Server.NextFrame(() =>
-							{
-								try
-								{
-									if (!Utility.IsPlayerValid(player)) return;
-									if (PlayerHasKnife(player)) return;
-									player.GiveNamedItem(CsItem.Knife);
-									Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInventoryServices");
-									player.ExecuteClientCommand("slot3");
-								}
-								catch (Exception ex)
-								{
-									Logger.LogWarning("Error re-issuing knife: " + ex.Message);
-								}
-							});
-						}
-
-						if (!_gBCommandsAllowed) return;
-
-						foreach (var entry in weaponsWithAmmo)
-						{
-							foreach (var ammo in entry.Value)
-							{
-								var itemHandle = player.GiveNamedItem(entry.Key);
-								if (itemHandle == 0) continue;
-								var newWeapon = new CBasePlayerWeapon(itemHandle);
-								Server.NextFrame(() =>
-						{
-							try
-							{
-								if (!newWeapon.IsValid) return;
-								newWeapon.Clip1 = ammo.Item1;
-								newWeapon.ReserveAmmo[0] = ammo.Item2;
-
-								IncrementWearForWeaponWithStickers(player, newWeapon);
-							}
-							catch (Exception ex)
-							{
-								Logger.LogWarning("Error setting weapon properties: " + ex.Message);
-							}
-						});
-							}
-						}
-					}, TimerFlags.STOP_ON_MAPCHANGE);
 		}
 
 		private void GivePlayerGloves(CCSPlayerController player)
