@@ -59,7 +59,8 @@
 
 ### 前提条件
 
-- CS2 服务器已安装 [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp)（net10.0 运行时）
+- CS2 **1.41.9.3**（2026-10-28 更新）
+- [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) **1.0.379**（net10.0 运行时）
 - 无需 MySQL、无需任何第三方插件依赖
 
 ### 安装步骤
@@ -70,7 +71,8 @@
 4. 将 `data/` 文件夹放到 `plugins/WeaponPaints/data/`
 5. 将 `lang/` 文件夹放到 `plugins/WeaponPaints/lang/`
 6. 在 `configs/core.json` 中设置 `FollowCS2ServerGuidelines` 为 **`false`**（否则皮肤不显示）
-7. 重启服务器
+7. **不要**在插件目录里保留 `CounterStrikeSharp.API.dll` 等运行时副本（旧版副本会覆盖 CSS 1.0.379 的 API）
+8. 重启服务器
 
 ### 部署目录结构
 
@@ -244,6 +246,18 @@ dotnet build
 ```
 
 编译产物：`bin/Debug/net10.0/WeaponPaints.dll` + `Newtonsoft.Json.dll`
+
+---
+
+## 更新日志
+
+### v3.3b（2026-11-02）
+- 适配 CS2 1.41.9.3 / CounterStrikeSharp 1.0.379
+- 修复 `RefreshWeapons` 0.23s 定时器：重查玩家有效性，并校验新发武器句柄后再写弹匣/备弹
+- 修复 `GivePlayerGloves` 0.2s bodygroup 定时器：重解析 pawn，`SetBodygroup` 前判有效
+- 修复 `OnEntityCreated` 的 `OwnerEntity` 判空（原先异常被吞，偶发不换肤）
+- `player_data.json` 改为原子写入，进程中断不再损坏存档
+- 安装注意：删除旧版插件目录里的 CSS 运行时副本
 
 ---
 

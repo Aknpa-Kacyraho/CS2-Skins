@@ -17,14 +17,15 @@ CS2 (Counter-Strike 2) 武器皮肤/刀/手套插件，基于 CounterStrikeSharp
 ## 编译与部署
 
 ```bash
-# WSL 编译（本地已有 .NET SDK 10.0）
-dotnet build /root/persona/CSGO/cs2-WeaponPaints-main/WeaponPaints.csproj
-
-# 部署（DLL 覆盖到 Windows CS2 插件目录）
-cp bin/Debug/net10.0/WeaponPaints.dll "/mnt/d/Soft/Steam/steamapps/common/Counter-Strike Global Offensive/game/csgo/addons/counterstrikesharp/plugins/WeaponPaints/WeaponPaints.dll"
+# 编译（.NET SDK 10）
+dotnet build WeaponPaints.csproj -c Release
 ```
 
-编译产物 `bin/Debug/net10.0/WeaponPaints.dll`。
+编译产物 `bin/Release/net10.0/WeaponPaints.dll`。
+
+**部署只拷这些**：`WeaponPaints.dll`、`WeaponPaints.deps.json`、`Newtonsoft.Json.dll`、`data/`、`lang/`（`gamedata/weaponpaints.json` 放 `addons/counterstrikesharp/gamedata/`）。
+
+**绝不要**把 `dotnet build` 复制出来的 `CounterStrikeSharp.API.dll`、`Microsoft.*`、`Serilog.*` 等运行时副本留在插件目录——它们会覆盖宿主 CSS 的 API（2026-11-02 曾残留 1.0.367 旧 API）。目标运行时：**CounterStrikeSharp 1.0.379 / CS2 1.41.9.3**。
 
 ## 部署目录结构
 
