@@ -251,6 +251,10 @@ dotnet build
 
 ## 更新日志
 
+### v3.3c（2026-11-10）
+- 适配 CS2 **1.41.9.6**（CounterStrikeSharp 1.0.379）
+- README / CLAUDE.md 补充部署规范：**不要**在插件目录保留旧版 CSS 运行时副本
+
 ### v3.3b（2026-11-02）
 - 适配 CS2 1.41.9.3 / CounterStrikeSharp 1.0.379
 - 修复 `RefreshWeapons` 0.23s 定时器：重查玩家有效性，并校验新发武器句柄后再写弹匣/备弹
