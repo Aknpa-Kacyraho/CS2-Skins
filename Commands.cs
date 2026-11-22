@@ -18,6 +18,12 @@ public partial class WeaponPaints
 
 		if (player == null || !player.IsValid || player.UserId == null || player.IsBot) return;
 
+		if ((command.GetArg(1) ?? string.Empty).Trim().Equals("status", StringComparison.OrdinalIgnoreCase))
+		{
+			PrintPlayerStatus(player);
+			return;
+		}
+
 		PlayerInfo? playerInfo = new PlayerInfo
 		{
 			UserId = player.UserId,
@@ -73,6 +79,67 @@ public partial class WeaponPaints
 		catch (Exception) { }
 	}
 
+	private void PrintPlayerStatus(CCSPlayerController player)
+	{
+		player.Print(Localizer["wp_status_title"]);
+		string none = Localizer["wp_status_none"];
+
+		string knife = none;
+		if (GPlayersKnife.TryGetValue(player.Slot, out var knives) &&
+		    knives.TryGetValue(player.Team, out var knifeKey) &&
+		    !string.IsNullOrEmpty(knifeKey))
+		{
+			knife = WeaponList.TryGetValue(knifeKey, out var knifeName) ? knifeName : knifeKey;
+		}
+		player.Print(Localizer["wp_status_knife", knife]);
+
+		string glove = none;
+		if (GPlayersGlove.TryGetValue(player.Slot, out var gloves) &&
+		    gloves.TryGetValue(player.Team, out var gloveId) && gloveId != 0)
+		{
+			var gloveEntry = GlovesList.FirstOrDefault(g => g["weapon_defindex"]?.ToString() == gloveId.ToString());
+			glove = gloveEntry?["paint_name"]?.ToString() ?? $"#{gloveId}";
+		}
+		player.Print(Localizer["wp_status_glove", glove]);
+
+		string agent = none;
+		if (GPlayersAgent.TryGetValue(player.Slot, out var agents))
+		{
+			string? model = player.TeamNum == 3 ? agents.CT : agents.T;
+			if (!string.IsNullOrEmpty(model) && model != "null")
+			{
+				agent = model;
+			}
+		}
+		player.Print(Localizer["wp_status_agent", agent]);
+
+		string music = none;
+		if (GPlayersMusic.TryGetValue(player.Slot, out var musicKits) &&
+		    musicKits.TryGetValue(player.Team, out var musicId) && musicId != 0)
+		{
+			var musicEntry = MusicList.FirstOrDefault(m => m["id"]?.ToString() == musicId.ToString());
+			music = musicEntry?["name"]?.ToString() ?? $"#{musicId}";
+		}
+		player.Print(Localizer["wp_status_music", music]);
+
+		string pin = none;
+		if (GPlayersPin.TryGetValue(player.Slot, out var pins) &&
+		    pins.TryGetValue(player.Team, out var pinId) && pinId != 0)
+		{
+			var pinEntry = PinsList.FirstOrDefault(p => p["id"]?.ToString() == pinId.ToString());
+			pin = pinEntry?["name"]?.ToString() ?? $"#{pinId}";
+		}
+		player.Print(Localizer["wp_status_pin", pin]);
+
+		int skinCount = 0;
+		if (GPlayerWeaponsInfo.TryGetValue(player.Slot, out var teams) &&
+		    teams.TryGetValue(player.Team, out var weapons))
+		{
+			skinCount = weapons.Count;
+		}
+		player.Print(Localizer["wp_status_skins", skinCount]);
+	}
+
 	private void OnCommandWS(CCSPlayerController? player, CommandInfo command)
 	{
 		if (!Config.Additional.SkinEnabled) return;
@@ -119,6 +186,10 @@ public partial class WeaponPaints
 				player!.Print(Localizer["wp_info_pin"]);
 			}
 
+		if (!string.IsNullOrEmpty(Localizer["wp_info_status"]))
+		{
+			player!.Print(Localizer["wp_info_status"]);
+		}
 		if (!string.IsNullOrEmpty(Localizer["wp_info_help"]))
 		{
 			player!.Print(Localizer["wp_info_help"]);

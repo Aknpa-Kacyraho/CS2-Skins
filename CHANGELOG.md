@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.5.1 — 2026-11-22
+
+### Added
+
+- `!wp status`: current knife, gloves, agent, music kit, pin and selected skin count
+  for the player's current team.
+- `!ws` help lists `!wp status`.
+
 ## 3.5.0 — 2026-11-22
 
 ### Added

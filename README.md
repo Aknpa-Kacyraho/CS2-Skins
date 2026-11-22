@@ -1060,13 +1060,14 @@ Change it in `WeaponPaints.json` if required.
 Current source version:
 
 ```text
-3.5.0
+3.5.1
 ```
 
 WeaponPaints checks the repository's `VERSION` file at runtime and logs whether the installed plugin is up to date, outdated or probably a development version.
 
 ## Local UX changes (3.5.x)
 
+- `!wp status` shows the current knife, gloves, agent, music kit, pin and skin count.
 - Menu backend missing → commands reply with a clear message instead of doing nothing.
 - Skin submenu can return to the weapon list.
 - Menu cooldown and `!wp` cooldown are independent; refresh shows remaining seconds.
