@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.4.2 — 2026-11-22
+
+### Fixed
+
+- StatTrak counts are persisted at round end in addition to disconnect. Previously a
+  crash or map change lost every kill counted during the round.
+- The round-end flush captures the `WeaponSynchronization` instance in a local, so an
+  unload/reload cannot null it between the check and the background task.
+
 ## 3.4.1 — 2026-11-22
 
 ### Fixed

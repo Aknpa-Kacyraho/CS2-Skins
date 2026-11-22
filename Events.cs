@@ -166,6 +166,30 @@ namespace WeaponPaints
 		private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
 		{
 			_gBCommandsAllowed = false;
+
+			// Persist StatTrak at round end as well as on disconnect: a crash or a map
+			// change used to lose every kill counted during the round.
+			WeaponSynchronization? sync = WeaponSync;
+			if (Config.Additional.SkinEnabled && sync != null)
+			{
+				foreach (CCSPlayerController player in Players.ToList())
+				{
+					if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
+						continue;
+
+					var playerInfo = new PlayerInfo
+					{
+						UserId = player.UserId,
+						Slot = player.Slot,
+						Index = (int)player.Index,
+						SteamId = player.SteamID.ToString(),
+						Name = player.PlayerName,
+						IpAddress = player.IpAddress?.Split(":")[0]
+					};
+					_ = Task.Run(async () => await sync.SyncStatTrakToDatabase(playerInfo));
+				}
+			}
+
 			return HookResult.Continue;
 		}
 

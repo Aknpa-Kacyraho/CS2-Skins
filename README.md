@@ -1060,7 +1060,7 @@ Change it in `WeaponPaints.json` if required.
 Current source version:
 
 ```text
-3.4.1
+3.4.2
 ```
 
 WeaponPaints checks the repository's `VERSION` file at runtime and logs whether the installed plugin is up to date, outdated or probably a development version.
