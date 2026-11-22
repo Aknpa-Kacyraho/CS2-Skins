@@ -30,7 +30,11 @@ namespace WeaponPaints
 				
 				case true:
 				{
-					var newDefIndex = WeaponDefindex.FirstOrDefault(x => x.Value == GPlayersKnife[player.Slot][player.Team]);
+					if (!GPlayersKnife.TryGetValue(player.Slot, out var knives) ||
+					    !knives.TryGetValue(player.Team, out var knifeName))
+						return;
+
+					var newDefIndex = WeaponDefindex.FirstOrDefault(x => x.Value == knifeName);
 					if (newDefIndex.Key == 0) return;
 
 					if (weapon.AttributeManager.Item.ItemDefinitionIndex != newDefIndex.Key)

@@ -21,7 +21,7 @@ public partial class WeaponPaints : BasePlugin, IPluginConfig<WeaponPaintsConfig
     public override string ModuleAuthor => "Nereziel & daffyy";
 	public override string ModuleDescription => "Skin, gloves, agents and knife selector, standalone and web-based";
 	public override string ModuleName => "WeaponPaints";
-	public override string ModuleVersion => "3.4.0";
+	public override string ModuleVersion => "3.4.1";
 
 	public override void Load(bool hotReload)
 	{
@@ -63,13 +63,28 @@ public partial class WeaponPaints : BasePlugin, IPluginConfig<WeaponPaintsConfig
 			}
 		}
 
-		Utility.LoadSkinsFromFile(ModuleDirectory + $"/data/skins_{_config.SkinsLanguage}.json", Logger);
-		Utility.LoadGlovesFromFile(ModuleDirectory + $"/data/gloves_{_config.SkinsLanguage}.json", Logger);
-		Utility.LoadAgentsFromFile(ModuleDirectory + $"/data/agents_{_config.SkinsLanguage}.json", Logger);
-		Utility.LoadMusicFromFile(ModuleDirectory + $"/data/music_{_config.SkinsLanguage}.json", Logger);
-		Utility.LoadPinsFromFile(ModuleDirectory + $"/data/collectibles_{_config.SkinsLanguage}.json", Logger);
+		string dataLanguage = _config.SkinsLanguage;
+		Utility.LoadSkinsFromFile(DataFile("skins", dataLanguage), Logger);
+		Utility.LoadGlovesFromFile(DataFile("gloves", dataLanguage), Logger);
+		Utility.LoadAgentsFromFile(DataFile("agents", dataLanguage), Logger);
+		Utility.LoadMusicFromFile(DataFile("music", dataLanguage), Logger);
+		Utility.LoadPinsFromFile(DataFile("collectibles", dataLanguage), Logger);
 
 		RegisterListeners();
+	}
+
+	private string DataFile(string prefix, string language)
+	{
+		string dir = Path.Combine(ModuleDirectory, "data");
+		string preferred = Path.Combine(dir, $"{prefix}_{language}.json");
+		if (File.Exists(preferred))
+		{
+			return preferred;
+		}
+
+		string fallback = Path.Combine(dir, $"{prefix}_en.json");
+		Logger.LogWarning("[WP] {Prefix} data for language '{Language}' not found; falling back to en ({Path}).", prefix, language, fallback);
+		return fallback;
 	}
 
 	public override void Unload(bool hotReload)

@@ -1060,12 +1060,12 @@ Change it in `WeaponPaints.json` if required.
 Current source version:
 
 ```text
-3.4.0
+3.4.1
 ```
 
 WeaponPaints checks the repository's `VERSION` file at runtime and logs whether the installed plugin is up to date, outdated or probably a development version.
 
-## Local stability changes (3.4.0)
+## Local stability changes (3.4.x)
 
 - Refreshing skins no longer kills and re-gives weapons. Guns and knives are re-skinned in place. This removes the "knife turns into an unpickable world prop" and "gun disappears after `!wp`" failure modes on CS2 1.41.9.x.
 - Missing or malformed `data/*.json` files are logged and fall back to an empty list instead of unloading the whole plugin.

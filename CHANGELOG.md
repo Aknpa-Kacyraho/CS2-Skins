@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.4.1 — 2026-11-22
+
+### Fixed
+
+- Knife defindex lookup uses `TryGetValue` on both the slot and team dictionaries; a
+  missing entry now skips the knife instead of throwing inside the skin applier.
+- `SkinsLanguage` files fall back to `en` (with a warning) when the requested language
+  file is missing. The loaders already tolerate a fully missing file, but a missing
+  translation no longer disables skins for that language.
+
 ## 3.4.0 — 2026-11-22
 
 Stability release based on upstream build-474, rebuilt for CS2 1.41.9.7 /
