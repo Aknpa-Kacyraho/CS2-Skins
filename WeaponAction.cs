@@ -1,0 +1,643 @@
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
+using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Utils;
+using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
+using Newtonsoft.Json.Linq;
+
+namespace WeaponPaints
+{
+	public partial class WeaponPaints
+	{
+		private void GivePlayerWeaponSkin(CCSPlayerController player, CBasePlayerWeapon weapon)
+		{
+			// Single choke point for the "real players only" boundary: every weapon path
+			// (spawn, pickup, entity-created, GiveNamedItem, refresh) ends up here.
+			if (!Utility.IsPlayerValid(player)) return;
+			if (!Config.Additional.SkinEnabled) return;
+			if (!GPlayerWeaponsInfo.TryGetValue(player.Slot, out _)) return;
+			
+			var designerName = weapon.DesignerName ?? "";
+			bool isKnife = designerName.Contains("knife") || designerName.Contains("bayonet");
+			
+			switch (isKnife)
+			{
+				case true when !HasChangedKnife(player, out var _):
+					return;
+				
+				case true:
+				{
+					var newDefIndex = WeaponDefindex.FirstOrDefault(x => x.Value == GPlayersKnife[player.Slot][player.Team]);
+					if (newDefIndex.Key == 0) return;
+
+					if (weapon.AttributeManager.Item.ItemDefinitionIndex != newDefIndex.Key)
+					{
+						SubclassChange(weapon, (ushort)newDefIndex.Key);
+					}
+
+					weapon.AttributeManager.Item.ItemDefinitionIndex = (ushort)newDefIndex.Key;
+					weapon.AttributeManager.Item.EntityQuality = 3;
+					
+					weapon.AttributeManager.Item.AttributeList.Attributes.RemoveAll();
+					weapon.AttributeManager.Item.NetworkedDynamicAttributes.Attributes.RemoveAll();
+					break;
+				}
+				default:
+					weapon.AttributeManager.Item.EntityQuality = 0;
+					break;
+			}
+
+			UpdatePlayerEconItemId(weapon.AttributeManager.Item);
+
+			int weaponDefIndex = weapon.AttributeManager.Item.ItemDefinitionIndex;
+			int fallbackPaintKit;
+			
+			weapon.AttributeManager.Item.AccountID = (uint)player.SteamID;
+			
+			List<JObject> skinInfo;
+			bool isLegacyModel;
+
+			if (_config.Additional.GiveRandomSkin &&
+			    !HasChangedPaint(player, weaponDefIndex, out _))
+			{
+				// Random skins
+				weapon.FallbackPaintKit = GetRandomPaint(weaponDefIndex);
+				weapon.FallbackSeed = 0;
+				weapon.FallbackWear = 0.01f;
+			
+				weapon.AttributeManager.Item.NetworkedDynamicAttributes.Attributes.RemoveAll();
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle, "set item texture prefab", GetRandomPaint(weaponDefIndex));
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle, "set item texture seed", 0);
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle, "set item texture wear", 0.01f);
+			
+				weapon.AttributeManager.Item.AttributeList.Attributes.RemoveAll();
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.AttributeList.Handle, "set item texture prefab", GetRandomPaint(weaponDefIndex));
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.AttributeList.Handle, "set item texture seed", 0);
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.AttributeList.Handle, "set item texture wear", 0.01f);
+			
+				fallbackPaintKit = weapon.FallbackPaintKit;
+			
+				if (fallbackPaintKit == 0)
+					return;
+			
+				skinInfo = SkinsList
+					.Where(w => 
+						w["weapon_defindex"]?.ToObject<int>() == weaponDefIndex && 
+						w["paint"]?.ToObject<int>() == fallbackPaintKit)
+					.ToList();
+				
+				isLegacyModel = skinInfo.Count <= 0 || skinInfo[0].Value<bool>("legacy_model");
+				UpdatePlayerWeaponMeshGroupMask(player, weapon, isLegacyModel);
+				return;
+			}
+
+			if (!HasChangedPaint(player, weaponDefIndex, out var weaponInfo) || weaponInfo == null)
+				return;
+
+			//Log($"Apply on {weapon.DesignerName}({weapon.AttributeManager.Item.ItemDefinitionIndex}) paint {gPlayerWeaponPaints[steamId.SteamId64][weapon.AttributeManager.Item.ItemDefinitionIndex]} seed {gPlayerWeaponSeed[steamId.SteamId64][weapon.AttributeManager.Item.ItemDefinitionIndex]} wear {gPlayerWeaponWear[steamId.SteamId64][weapon.AttributeManager.Item.ItemDefinitionIndex]}");
+
+			weapon.AttributeManager.Item.AttributeList.Attributes.RemoveAll();
+			weapon.AttributeManager.Item.NetworkedDynamicAttributes.Attributes.RemoveAll();
+			
+			UpdatePlayerEconItemId(weapon.AttributeManager.Item);
+
+			weapon.AttributeManager.Item.CustomName = weaponInfo.Nametag;
+			weapon.FallbackPaintKit = weaponInfo.Paint;
+			
+			weapon.FallbackSeed = weaponInfo is { Paint: 38, Seed: 0 } ? _fadeSeed++ : weaponInfo.Seed;
+			
+			weapon.FallbackWear = weaponInfo.Wear;
+			CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle, "set item texture prefab", weapon.FallbackPaintKit);
+
+			if (weaponInfo.StatTrak)
+			{			
+				weapon.AttributeManager.Item.EntityQuality = 9;
+
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle, "kill eater", ViewAsFloat((uint)weaponInfo.StatTrakCount));
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle, "kill eater score type", 0);
+				
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.AttributeList.Handle, "kill eater", ViewAsFloat((uint)weaponInfo.StatTrakCount));
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.AttributeList.Handle, "kill eater score type", 0);
+			}
+
+			fallbackPaintKit = weapon.FallbackPaintKit;
+
+			if (fallbackPaintKit == 0)
+				return;
+
+			if (weaponInfo.KeyChain != null) SetKeychain(player, weapon);
+			if (weaponInfo.Stickers.Count > 0) SetStickers(player, weapon);
+
+			skinInfo = SkinsList
+				.Where(w => 
+					w["weapon_defindex"]?.ToObject<int>() == weaponDefIndex && 
+					w["paint"]?.ToObject<int>() == fallbackPaintKit)
+				.ToList();
+				
+			isLegacyModel = skinInfo.Count <= 0 || skinInfo[0].Value<bool>("legacy_model");
+			UpdatePlayerWeaponMeshGroupMask(player, weapon, isLegacyModel);
+		}
+		
+		// silly method to update sticker when call RefreshWeapons()
+		private void IncrementWearForWeaponWithStickers(CCSPlayerController player, CBasePlayerWeapon weapon)
+		{
+			int weaponDefIndex = weapon.AttributeManager.Item.ItemDefinitionIndex;
+			if (!HasChangedPaint(player, weaponDefIndex, out var weaponInfo) || weaponInfo == null ||
+			    weaponInfo.Stickers.Count <= 0) return;
+			
+			float wearIncrement = 0.001f;
+			float currentWear = weaponInfo.Wear;
+
+			var playerWear = _temporaryPlayerWeaponWear.GetOrAdd(player.Slot, _ => new ConcurrentDictionary<int, float>());
+
+			float incrementedWear = playerWear.AddOrUpdate(
+				weaponDefIndex,
+				currentWear + wearIncrement,
+				(_, oldWear) => Math.Min(oldWear + wearIncrement, 1.0f)
+			);
+
+			weapon.FallbackWear = incrementedWear;
+		}
+
+		private void SetStickers(CCSPlayerController? player, CBasePlayerWeapon weapon)
+		{
+			if (player == null || !player.IsValid) return;
+
+			int weaponDefIndex = weapon.AttributeManager.Item.ItemDefinitionIndex;
+
+			if (!HasChangedPaint(player ,weaponDefIndex, out var weaponInfo) || weaponInfo == null)
+				return;
+
+			foreach (var sticker in weaponInfo.Stickers)
+			{
+				int stickerSlot = weaponInfo.Stickers.IndexOf(sticker);
+
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+					$"sticker slot {stickerSlot} id", ViewAsFloat(sticker.Id));
+				if (sticker.OffsetX != 0 || sticker.OffsetY != 0)
+					CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+						$"sticker slot {stickerSlot} schema", 0);
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+					$"sticker slot {stickerSlot} offset x", sticker.OffsetX);
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+					$"sticker slot {stickerSlot} offset y", sticker.OffsetY);
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+					$"sticker slot {stickerSlot} wear", sticker.Wear);
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+					$"sticker slot {stickerSlot} scale", sticker.Scale);
+				CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+					$"sticker slot {stickerSlot} rotation", sticker.Rotation);
+			}
+
+			if (_temporaryPlayerWeaponWear.TryGetValue(player.Slot, out var playerWear) &&
+				playerWear.TryGetValue(weaponDefIndex, out float storedWear))
+			{
+				weapon.FallbackWear = storedWear;
+			}
+		}
+
+		private void SetKeychain(CCSPlayerController? player, CBasePlayerWeapon weapon)
+		{
+			if (player == null || !player.IsValid) return;
+
+			int weaponDefIndex = weapon.AttributeManager.Item.ItemDefinitionIndex;
+
+			if (!HasChangedPaint(player, weaponDefIndex, out var value) || value?.KeyChain == null)
+				return;
+			
+			var keyChain = value.KeyChain;
+
+			CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+				"keychain slot 0 id", ViewAsFloat(keyChain.Id));
+			CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+				"keychain slot 0 offset x", keyChain.OffsetX);
+			CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+				"keychain slot 0 offset y", keyChain.OffsetY);
+			CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+				"keychain slot 0 offset z", keyChain.OffsetZ);
+			CAttributeListSetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle,
+				"keychain slot 0 seed", ViewAsFloat(keyChain.Seed));
+		}
+
+		private static void GiveKnifeToPlayer(CCSPlayerController? player)
+		{
+			if (!_config.Additional.KnifeEnabled || player == null || !player.IsValid) return;
+
+			if (PlayerHasKnife(player)) return;
+
+			//string knifeToGive = (CsTeam)player.TeamNum == CsTeam.Terrorist ? "weapon_knife_t" : "weapon_knife";
+			player.GiveNamedItem(CsItem.Knife);
+			Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInventoryServices");
+		}
+
+		private static bool PlayerHasKnife(CCSPlayerController? player)
+		{
+			if (!_config.Additional.KnifeEnabled) return false;
+
+			if (player == null || !player.IsValid || !player.PlayerPawn.IsValid)
+			{
+				return false;
+			}
+
+			if (player.PlayerPawn.Value == null || player.PlayerPawn.Value.WeaponServices == null || player.PlayerPawn.Value.ItemServices == null)
+				return false;
+
+			var weapons = player.PlayerPawn.Value.WeaponServices?.MyWeapons;
+			if (weapons == null) return false;
+			foreach (var weapon in weapons)
+			{
+				if (!weapon.IsValid || weapon.Value == null || !weapon.Value.IsValid) continue;
+				if (weapon.Value.DesignerName.Contains("knife") || weapon.Value.DesignerName.Contains("bayonet"))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private void RefreshWeapons(CCSPlayerController? player)
+		{
+			if (!_gBCommandsAllowed) return;
+			if (player == null || !player.IsValid || player.PlayerPawn.Value == null || (LifeState_t)player.LifeState != LifeState_t.LIFE_ALIVE)
+				return;
+			if (player.PlayerPawn.Value.WeaponServices == null || player.PlayerPawn.Value.ItemServices == null)
+				return;
+
+			var weapons = player.PlayerPawn.Value.WeaponServices.MyWeapons;
+
+			if (weapons.Count == 0)
+				return;
+			if (player.Team is CsTeam.None or CsTeam.Spectator)
+				return;
+
+			foreach (var weapon in weapons)
+			{
+				if (!weapon.IsValid || weapon.Value == null ||
+					!weapon.Value.IsValid || !weapon.Value.DesignerName.Contains("weapon_"))
+					continue;
+				
+				try
+				{
+					// Re-apply in place. Killing and re-giving every weapon (the upstream
+					// approach) caused lost guns and knife world-props on CS2 1.41.9.x.
+					GivePlayerWeaponSkin(player, weapon.Value);
+				}
+				catch (Exception ex)
+				{
+					Logger.LogWarning(ex.Message);
+				}
+			}
+
+		}
+
+		private void GivePlayerGloves(CCSPlayerController player)
+		{
+			if (!Utility.IsPlayerValid(player) || (LifeState_t)player.LifeState != LifeState_t.LIFE_ALIVE) return;
+
+			CCSPlayerPawn? pawn = player.PlayerPawn.Value;
+			if (pawn == null || !pawn.IsValid)
+				return;
+
+			CEconItemView item = pawn.EconGloves;
+
+			var hasPluginGlove = GPlayersGlove.TryGetValue(player.Slot, out var selectedGloves) &&
+			                     selectedGloves.TryGetValue(player.Team, out var selectedGloveId) &&
+			                     selectedGloveId != 0;
+
+			if (!hasPluginGlove)
+			{
+				// "Gloves | Default" (or no glove chosen). Leave inventory gloves alone, but drop a glove
+				// the plugin applied earlier: the pawn keeps it across respawns.
+				if (IsPluginGlove(item.ItemDefinitionIndex, item.AccountID))
+				{
+					item.NetworkedDynamicAttributes.Attributes.RemoveAll();
+					item.AttributeList.Attributes.RemoveAll();
+					item.ItemDefinitionIndex = 0;
+					item.ItemID = 0;
+					item.ItemIDLow = 0;
+					item.ItemIDHigh = 0;
+					item.Initialized = false;
+
+					unchecked
+					{
+						pawn.EconGlovesChanged++;
+					}
+					Utilities.SetStateChanged(pawn, "CCSPlayerPawn", "m_nEconGlovesChanged");
+				}
+
+				if (item.ItemDefinitionIndex == 0)
+					ShowAgentDefaultHands(pawn);
+				return;
+			}
+
+			item.NetworkedDynamicAttributes.Attributes.RemoveAll();
+			item.AttributeList.Attributes.RemoveAll();
+
+			// Without UpdateItemView, fall back to forcing a weapon switch so the glove gets redrawn.
+			var canUpdateItemView = UpdateItemView != null;
+			if (!canUpdateItemView)
+				player.ExecuteClientCommand("lastinv");
+			Instance.AddTimer(0.08f, () =>
+			{	
+				try
+				{
+					if (!player.IsValid)
+						return;
+
+					if (!player.PawnIsAlive || !pawn.IsValid)
+						return;
+
+					// The player may have respawned during the 0.08s delay; never write to the
+					// old pawn's econ item in that case.
+					var currentPawn = player.PlayerPawn.Value;
+					if (currentPawn == null || !currentPawn.IsValid || currentPawn.Handle != pawn.Handle)
+						return;
+
+					if (!GPlayersGlove.TryGetValue(player.Slot, out var gloveInfo) ||
+					    !gloveInfo.TryGetValue(player.Team, out var gloveId) ||
+					    gloveId == 0 ||
+					    !HasChangedPaint(player, gloveId, out var weaponInfo) || weaponInfo == null)
+						return;
+
+					item.ItemDefinitionIndex = gloveId;
+					
+					UpdatePlayerEconItemId(item);
+
+					item.NetworkedDynamicAttributes.Attributes.RemoveAll();
+					CAttributeListSetOrAddAttributeValueByName.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture prefab", weaponInfo.Paint);
+					CAttributeListSetOrAddAttributeValueByName.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture seed", weaponInfo.Seed);
+					CAttributeListSetOrAddAttributeValueByName.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture wear", weaponInfo.Wear);
+
+					item.AttributeList.Attributes.RemoveAll();
+					CAttributeListSetOrAddAttributeValueByName.Invoke(item.AttributeList.Handle, "set item texture prefab", weaponInfo.Paint);
+					CAttributeListSetOrAddAttributeValueByName.Invoke(item.AttributeList.Handle, "set item texture seed", weaponInfo.Seed);
+					CAttributeListSetOrAddAttributeValueByName.Invoke(item.AttributeList.Handle, "set item texture wear", weaponInfo.Wear);
+
+					item.Initialized = true;
+
+					// Re-publish the glove so teammates see it at once (issue #548: they saw it wrong
+					// at round start until the player switched weapons). The old
+					// "first_or_third_person" bodygroup toggle was removed: current player models have
+					// no such group, so it did nothing.
+					if (canUpdateItemView && TryUpdateItemView(item))
+					{
+						Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInventoryServices");
+					}
+					else
+					{
+						player.ExecuteClientCommand("lastinv");
+					}
+				}
+				catch (Exception) { }
+			}, TimerFlags.STOP_ON_MAPCHANGE);
+		}
+
+		private bool TryUpdateItemView(CEconItemView item)
+		{
+			try
+			{
+				UpdateItemView?.Invoke(item.Handle, nint.Zero);
+				return UpdateItemView != null;
+			}
+			catch (Exception ex)
+			{
+				Logger.LogWarning("UpdateItemView failed (def {DefinitionIndex}): {Message}", item.ItemDefinitionIndex, ex.Message);
+				return false;
+			}
+		}
+
+		// Inventory gloves carry the owner's AccountID; gloves the plugin writes never set it.
+		// A glove item with a def index but no account is therefore one the plugin applied.
+		private static bool IsPluginGlove(ushort itemDefinitionIndex, uint accountId) =>
+			itemDefinitionIndex != 0 && accountId == 0;
+
+		// Agent models hide their built-in hands through the "default_gloves" bodygroup while an
+		// econ glove is worn, and nothing shows them again when the glove is removed or the pawn
+		// respawns without one: empty sleeves. The "SetBodygroup" input does not change this group,
+		// so write the mesh group mask directly. Agent models list default_gloves first:
+		// bit 0 = visible, bit 1 = hidden.
+		private void ShowAgentDefaultHands(CCSPlayerPawn pawn)
+		{
+			ApplyDefaultHandsMask(pawn);
+			// A model refresh right after the glove change can re-publish the old mask; apply once more.
+			AddTimer(0.3f, () => ApplyDefaultHandsMask(pawn), TimerFlags.STOP_ON_MAPCHANGE);
+		}
+
+		private static void ApplyDefaultHandsMask(CCSPlayerPawn pawn)
+		{
+			if (!pawn.IsValid || pawn.EconGloves.ItemDefinitionIndex != 0)
+				return;
+
+			var state = pawn.CBodyComponent?.SceneNode?.GetSkeletonInstance()?.ModelState;
+			if (state == null)
+				return;
+
+			const ulong handsVisible = 0x1, handsHidden = 0x2;
+			var mask = state.MeshGroupMask;
+			if ((mask & handsHidden) == 0)
+				return;
+
+			state.MeshGroupMask = (mask & ~handsHidden) | handsVisible;
+			Utilities.SetStateChanged(pawn, "CBaseEntity", "m_CBodyComponent");
+		}
+
+		private static int GetRandomPaint(int defindex)
+		{
+			if (SkinsList.Count == 0)
+				return 0;
+
+			Random rnd = new Random();
+
+			// Filter weapons by the provided defindex
+			var filteredWeapons = SkinsList.Where(w => w["weapon_defindex"]?.ToString() == defindex.ToString()).ToList();
+
+			if (filteredWeapons.Count == 0)
+				return 0;
+
+			var randomWeapon = filteredWeapons[rnd.Next(filteredWeapons.Count)];
+
+			return int.TryParse(randomWeapon["paint"]?.ToString(), out var paintValue) ? paintValue : 0;
+		}
+
+		//xstage idea on css discord
+		public static void SubclassChange(CBasePlayerWeapon weapon, ushort itemD)
+		{
+			weapon.AcceptInput("ChangeSubclass", value: itemD.ToString());
+		}
+
+		public static void SetBodygroup(CCSPlayerPawn pawn, string group, int value)
+		{
+			pawn.AcceptInput("SetBodygroup", value:$"{group},{value}");
+		}
+
+		private void UpdateWeaponMeshGroupMask(CBaseEntity weapon, bool isLegacy = false)
+		{
+				if (weapon.CBodyComponent?.SceneNode == null) return;
+				//var skeleton = weapon.CBodyComponent.SceneNode.GetSkeletonInstance();
+				// skeleton.ModelState.MeshGroupMask = isLegacy ? 2UL : 1UL;
+
+				weapon.AcceptInput("SetBodygroup", value: $"body,{(isLegacy ? 1 : 0)}");
+		}
+
+		private void UpdatePlayerWeaponMeshGroupMask(CCSPlayerController player, CBasePlayerWeapon weapon, bool isLegacy)
+		{
+			UpdateWeaponMeshGroupMask(weapon, isLegacy);
+		}
+
+		private static void GivePlayerAgent(CCSPlayerController player)
+		{
+			// Hard boundary: WeaponPaints only serves real players. Bots must never receive
+			// an agent model or a pin from a slot that a real player used earlier.
+			if (!Utility.IsPlayerValid(player)) return;
+			if (!GPlayersAgent.TryGetValue(player.Slot, out var value)) return;
+
+			var model = player.TeamNum == 3 ? value.CT : value.T;
+
+			if (player.PlayerPawn.Value == null)
+				return;
+
+			try
+			{
+				Server.NextFrame(() =>
+				{
+					if (!player.IsValid) return;
+
+					var pawn = player.PlayerPawn.Value;
+					if (pawn == null || !pawn.IsValid) return;
+
+					var currentModel = pawn.CBodyComponent?.SceneNode?.GetSkeletonInstance()?.ModelState.ModelName.ToString();
+
+					if (string.IsNullOrEmpty(model) || model == "null")
+					{
+						// "Agent | Default". The pawn keeps the plugin agent across respawns, so put
+						// back the model it wore before the plugin first changed it.
+						if (IsPluginAppliedAgent(player.Slot, currentModel) &&
+						    OriginalPawnModel.TryGetValue(player.Slot, out var defaultModel))
+						{
+							pawn.SetModel(defaultModel);
+							PluginAppliedAgent.TryRemove(player.Slot, out _);
+						}
+						return;
+					}
+
+					// Remember the model the game gave the pawn (inventory agent or map default) before
+					// the first override. CS2 serves every agent, the stock defaults included, from
+					// "agents/models/...", so only the exact model the plugin set is skipped.
+					if (!string.IsNullOrEmpty(currentModel) && currentModel.EndsWith(".vmdl") &&
+					    !IsPluginAppliedAgent(player.Slot, currentModel))
+						OriginalPawnModel[player.Slot] = currentModel;
+
+					var appliedModel = $"agents/models/{model}.vmdl";
+					pawn.SetModel(appliedModel);
+					PluginAppliedAgent[player.Slot] = appliedModel;
+				});
+			}
+			catch (Exception)
+			{
+			}
+		}
+
+		private static void GivePlayerMusicKit(CCSPlayerController player)
+		{
+			if (player.IsBot) return;
+			if (!GPlayersMusic.TryGetValue(player.Slot, out var musicInfo) ||
+			    !musicInfo.TryGetValue(player.Team, out var musicId) || musicId == 0) return;
+			
+			if (player.InventoryServices == null) return;
+
+			player.MusicKitID = musicId;
+			// player.MvpNoMusic = false;
+			player.InventoryServices.MusicID = musicId;
+			Utilities.SetStateChanged(player, "CCSPlayerController", "m_iMusicKitID");
+			// Utilities.SetStateChanged(player, "CCSPlayerController", "m_bMvpNoMusic");
+			Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInventoryServices");
+			// player.MusicKitMVPs = musicId;
+			// Utilities.SetStateChanged(player, "CCSPlayerController", "m_iMusicKitMVPs");
+		}
+
+		private static void GivePlayerPin(CCSPlayerController player)
+		{
+			if (!Utility.IsPlayerValid(player)) return;
+			if (!GPlayersPin.TryGetValue(player.Slot, out var pinInfo) ||
+			    !pinInfo.TryGetValue(player.Team, out var pinId)) return;
+			if (player.InventoryServices == null) return;
+			
+			player.InventoryServices.Rank[5] = pinId > 0 ? (MedalRank_t)pinId : MedalRank_t.MEDAL_RANK_NONE;
+			Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInventoryServices");
+		}
+		
+		private void GiveOnItemPickup(CCSPlayerController player)
+		{
+			var pawn = player.PlayerPawn.Value;
+			if (pawn == null) return;
+			
+			var myWeapons = pawn.WeaponServices?.MyWeapons;
+			if (myWeapons == null) return;
+			
+			foreach (var handle in myWeapons)
+			{
+				var weapon = handle.Value;
+			
+				if (weapon == null || !weapon.IsValid) continue;
+				// Do not Kill/regive the knife here: on CS2 1.41.9.x that turns the held
+				// knife into an unpickable world prop and can leave a ghost knife slot.
+				GivePlayerWeaponSkin(player, weapon);
+			}
+		}
+		
+		private void UpdatePlayerEconItemId(CEconItemView econItemView)
+		{
+			var itemId = _nextItemId++;
+			
+			econItemView.ItemID = itemId;
+			econItemView.ItemIDLow = (uint)itemId & 0xFFFFFFFF;
+			econItemView.ItemIDHigh = (uint)itemId >> 32;
+		}
+
+		private static CCSPlayerController? GetPlayerFromItemServices(CCSPlayer_ItemServices itemServices)
+		{
+			var pawn = itemServices.Pawn.Value;
+			if (pawn == null || !pawn.IsValid || !pawn.Controller.IsValid || pawn.Controller.Value == null) return null;
+			var player = new CCSPlayerController(pawn.Controller.Value.Handle);
+			return !Utility.IsPlayerValid(player) ? null : player;
+		}
+
+		private static bool HasChangedKnife(CCSPlayerController player, out string? knifeValue)
+		{
+			knifeValue = null;
+
+			// Check if player has knife info for their slot and team
+			if (!GPlayersKnife.TryGetValue(player.Slot, out var knife) ||
+			    !knife.TryGetValue(player.Team, out var value) ||
+			    value == "weapon_knife") return false;
+			knifeValue = value; // Assign the knife value to the out parameter
+			return true;
+		}
+		
+		private static bool HasChangedPaint(CCSPlayerController player, int weaponDefIndex, out WeaponInfo? weaponInfo)
+		{
+			weaponInfo = null;
+
+			// Check if player has weapons info for their slot and team
+			if (!GPlayerWeaponsInfo.TryGetValue(player.Slot, out var teamInfo) || 
+			    !teamInfo.TryGetValue(player.Team, out var teamWeapons))
+			{
+				return false;
+			}
+
+			// Check if the specified weapon has a paint/skin change
+			if (!teamWeapons.TryGetValue(weaponDefIndex, out var value) || value.Paint <= 0) return false;
+			
+			weaponInfo = value; // Assign the out variable when it exists
+			return true;
+		}
+
+		private static float ViewAsFloat(uint value)
+		{
+			return BitConverter.Int32BitsToSingle((int)value);
+		}
+	}
+}
