@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.5.0 — 2026-11-22
+
+### Added
+
+- Missing menu backend is no longer silent: `!knife`, `!gloves`, `!music`, `!pins` and
+  `!skins` reply with `wp_menu_unavailable` when MenuManager is not loaded.
+- Skin submenu has a “← 返回武器列表” option, so switching weapons does not require
+  retyping the command.
+- `!ws` help lists `!skins`, `!stattrak`, and the RollTheDice help entry.
+- Refresh cooldown shows the remaining seconds.
+
+### Changed
+
+- Menu opening uses its own 1-second cooldown; `!wp` no longer blocks menus and menus no
+  longer block `!wp`.
+- Chinese copy fixes: 代理 → 特工, 固定项 → 胸章, “正在刷新” → “已刷新”.
+- `lang/en.json` now carries the same Chinese copy as `lang/zh-cn.json`. CSS currently
+  falls back to `en` (`ServerLanguage=zh-CN` is unsupported), so players previously saw
+  English menu/help text.
+- Selection messages now tell the player how to change the selection again.
+
 ## 3.4.2 — 2026-11-22
 
 ### Fixed

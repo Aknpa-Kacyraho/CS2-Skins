@@ -30,42 +30,44 @@ public partial class WeaponPaints
 
 		try
 		{
-			if (player != null && !CommandsCooldown.TryGetValue(player.Slot, out var cooldownEndTime) ||
-			    player != null && DateTime.UtcNow >= (CommandsCooldown.TryGetValue(player.Slot, out cooldownEndTime) ? cooldownEndTime : DateTime.UtcNow))
+			if (player != null && CommandsCooldown.TryGetValue(player.Slot, out var cooldownEndTime) &&
+			    DateTime.UtcNow < cooldownEndTime)
 			{
-				CommandsCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(Config.CmdRefreshCooldownSeconds);
-
-				if (WeaponSync != null && playerInfo != null)
-				{
-					var info = playerInfo;
-					// Load first, then apply on the main thread. Applying the old cache right
-					// after starting the query is why !wp used to look like a no-op.
-					_ = Task.Run(async () =>
-					{
-						await WeaponSync.GetPlayerData(info);
-						Server.NextWorldUpdate(() =>
-						{
-							if (!IsSlotOwnedBy(info.Slot, info.SteamId)) return;
-							var target = Utilities.GetPlayers().FirstOrDefault(p =>
-								p != null && p.IsValid && p.Slot == info.Slot);
-							if (target == null || !Utility.IsPlayerValid(target) ||
-							    !string.Equals(target.SteamID.ToString(), info.SteamId, StringComparison.Ordinal))
-								return;
-
-							GivePlayerGloves(target);
-							RefreshWeapons(target);
-							GivePlayerAgent(target);
-							GivePlayerMusicKit(target);
-							GivePlayerPin(target);
-							target.Print(Localizer["wp_command_refresh_done"]);
-						});
-					});
-				}
+				int remaining = Math.Max(1, (int)Math.Ceiling((cooldownEndTime - DateTime.UtcNow).TotalSeconds));
+				player.Print(Localizer["wp_command_cooldown", remaining]);
 				return;
 			}
-			if (!string.IsNullOrEmpty(Localizer["wp_command_cooldown"]))
+
+			if (player != null)
 			{
-				player!.Print(Localizer["wp_command_cooldown"]);
+				CommandsCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(Config.CmdRefreshCooldownSeconds);
+			}
+
+			if (WeaponSync != null && playerInfo != null)
+			{
+				var info = playerInfo;
+				// Load first, then apply on the main thread. Applying the old cache right
+				// after starting the query is why !wp used to look like a no-op.
+				_ = Task.Run(async () =>
+				{
+					await WeaponSync.GetPlayerData(info);
+					Server.NextWorldUpdate(() =>
+					{
+						if (!IsSlotOwnedBy(info.Slot, info.SteamId)) return;
+						var target = Utilities.GetPlayers().FirstOrDefault(p =>
+							p != null && p.IsValid && p.Slot == info.Slot);
+						if (target == null || !Utility.IsPlayerValid(target) ||
+						    !string.Equals(target.SteamID.ToString(), info.SteamId, StringComparison.Ordinal))
+							return;
+
+						GivePlayerGloves(target);
+						RefreshWeapons(target);
+						GivePlayerAgent(target);
+						GivePlayerMusicKit(target);
+						GivePlayerPin(target);
+						target.Print(Localizer["wp_command_refresh_done"]);
+					});
+				});
 			}
 		}
 		catch (Exception) { }
@@ -76,13 +78,21 @@ public partial class WeaponPaints
 		if (!Config.Additional.SkinEnabled) return;
 		if (!Utility.IsPlayerValid(player)) return;
 
-		if (!string.IsNullOrEmpty(Localizer["wp_info_website"]))
+		if (!string.IsNullOrEmpty(Config.Website) && !string.IsNullOrEmpty(Localizer["wp_info_website"]))
 		{
 			player!.Print(Localizer["wp_info_website", Config.Website]);
 		}
 		if (!string.IsNullOrEmpty(Localizer["wp_info_refresh"]))
 		{
 			player!.Print(Localizer["wp_info_refresh"]);
+		}
+		if (!string.IsNullOrEmpty(Localizer["wp_info_skins"]))
+		{
+			player!.Print(Localizer["wp_info_skins"]);
+		}
+		if (!string.IsNullOrEmpty(Localizer["wp_info_stattrak"]))
+		{
+			player!.Print(Localizer["wp_info_stattrak"]);
 		}
 
 		if (Config.Additional.GloveEnabled)
@@ -109,10 +119,29 @@ public partial class WeaponPaints
 				player!.Print(Localizer["wp_info_pin"]);
 			}
 
+		if (!string.IsNullOrEmpty(Localizer["wp_info_help"]))
+		{
+			player!.Print(Localizer["wp_info_help"]);
+		}
+
 		if (!Config.Additional.KnifeEnabled) return;
 		if (!string.IsNullOrEmpty(Localizer["wp_info_knife"]))
 		{
 			player!.Print(Localizer["wp_info_knife"]);
+		}
+	}
+
+	private void RegisterMenuUnavailable(IEnumerable<string> commands, string description)
+	{
+		foreach (string command in commands)
+		{
+			AddCommand($"css_{command}", description, (player, _) =>
+			{
+				if (player != null && player.IsValid)
+				{
+					player.Print(Localizer["wp_menu_unavailable"]);
+				}
+			});
 		}
 	}
 
@@ -340,25 +369,26 @@ public partial class WeaponPaints
 		{
 			AddCommand($"css_{c}", "Knife Menu", (player, _) =>
 			{
-				if (giveItemMenu == null) return;
 				if (!Utility.IsPlayerValid(player) || !_gBCommandsAllowed) return;
+				if (giveItemMenu == null)
+				{
+					player!.Print(Localizer["wp_menu_unavailable"]);
+					return;
+				}
 
 				if (player == null || player.UserId == null) return;
 
-				if (!CommandsCooldown.TryGetValue(player.Slot, out var cooldownEndTime) ||
-				    DateTime.UtcNow >= (CommandsCooldown.TryGetValue(player.Slot, out cooldownEndTime) ? cooldownEndTime : DateTime.UtcNow))
+				if (!MenuCooldown.TryGetValue(player.Slot, out var menuCooldownEnd) ||
+				    DateTime.UtcNow >= menuCooldownEnd)
 				{
-					CommandsCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(Config.CmdRefreshCooldownSeconds);
+					MenuCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(1);
 					giveItemMenu.PostSelectAction = PostSelectAction.Close;
 					
 					giveItemMenu.Open(player);
 
 					return;
 				}
-				if (!string.IsNullOrEmpty(Localizer["wp_command_cooldown"]))
-				{
-					player.Print(Localizer["wp_command_cooldown"]);
-				}
+				// 1s menu cooldown: stay silent, the next key press succeeds.
 			});
 		});
 	}
@@ -483,8 +513,26 @@ public partial class WeaponPaints
 					}
 				}
 			}
+			if (skinSubMenu != null)
+			{
+				skinSubMenu.AddMenuOption(Localizer["wp_menu_back"], (p, _) =>
+				{
+					if (p == null || !p.IsValid) return;
+					// Re-open the weapon list on the next frame; the menu close triggered by
+					// the selection runs in the current frame.
+					Server.NextFrame(() => weaponSelectionMenu?.Open(p));
+				});
+			}
+
 			if (player != null && Utility.IsPlayerValid(player))
-				skinSubMenu?.Open(player);
+			{
+				if (skinSubMenu == null)
+				{
+					player!.Print(Localizer["wp_menu_unavailable"]);
+					return;
+				}
+				skinSubMenu.Open(player);
+			}
 		};
 
 		// Add weapon options to the weapon selection menu
@@ -504,17 +552,19 @@ public partial class WeaponPaints
 
 				if (player == null || player.UserId == null) return;
 
-				if (!CommandsCooldown.TryGetValue(player.Slot, out var cooldownEndTime) ||
-				    DateTime.UtcNow >= (CommandsCooldown.TryGetValue(player.Slot, out cooldownEndTime) ? cooldownEndTime : DateTime.UtcNow))
+				if (!MenuCooldown.TryGetValue(player.Slot, out var menuCooldownEnd) ||
+				    DateTime.UtcNow >= menuCooldownEnd)
 				{
-					CommandsCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(Config.CmdRefreshCooldownSeconds);
-					weaponSelectionMenu?.Open(player);
+					MenuCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(1);
+					if (weaponSelectionMenu == null)
+					{
+						player.Print(Localizer["wp_menu_unavailable"]);
+						return;
+					}
+					weaponSelectionMenu.Open(player);
 					return;
 				}
-				if (!string.IsNullOrEmpty(Localizer["wp_command_cooldown"]))
-				{
-					player.Print(Localizer["wp_command_cooldown"]);
-				}
+				// 1s menu cooldown: stay silent, the next key press succeeds.
 			});
 		});
 	}
@@ -522,7 +572,11 @@ public partial class WeaponPaints
 	private void SetupGlovesMenu()
 	{
 		var glovesSelectionMenu = Utility.CreateMenu(Localizer["wp_glove_menu_title"]);
-		if (glovesSelectionMenu == null) return;
+		if (glovesSelectionMenu == null)
+		{
+			RegisterMenuUnavailable(_config.Additional.CommandGlove, "Gloves Menu");
+			return;
+		}
 		glovesSelectionMenu.PostSelectAction = PostSelectAction.Close;
 			
 		var handleGloveSelection = (CCSPlayerController? player, ChatMenuOption option) =>
@@ -643,17 +697,14 @@ public partial class WeaponPaints
 
 				if (player == null || player.UserId == null) return;
 
-				if (!CommandsCooldown.TryGetValue(player.Slot, out var cooldownEndTime) ||
-				    DateTime.UtcNow >= (CommandsCooldown.TryGetValue(player.Slot, out cooldownEndTime) ? cooldownEndTime : DateTime.UtcNow))
+				if (!MenuCooldown.TryGetValue(player.Slot, out var menuCooldownEnd) ||
+				    DateTime.UtcNow >= menuCooldownEnd)
 				{
-					CommandsCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(Config.CmdRefreshCooldownSeconds);
+					MenuCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(1);
 					glovesSelectionMenu?.Open(player);
 					return;
 				}
-				if (!string.IsNullOrEmpty(Localizer["wp_command_cooldown"]))
-				{
-					player.Print(Localizer["wp_command_cooldown"]);
-				}
+				// 1s menu cooldown: stay silent, the next key press succeeds.
 			});
 		});
 	}
@@ -741,11 +792,15 @@ public partial class WeaponPaints
 
 				if (player == null || player.UserId == null) return;
 
-				if (!CommandsCooldown.TryGetValue(player.Slot, out DateTime cooldownEndTime) ||
-				    DateTime.UtcNow >= (CommandsCooldown.TryGetValue(player.Slot, out cooldownEndTime) ? cooldownEndTime : DateTime.UtcNow))
+				if (!MenuCooldown.TryGetValue(player.Slot, out DateTime menuCooldownEnd) ||
+				    DateTime.UtcNow >= menuCooldownEnd)
 				{
 					var agentsSelectionMenu = Utility.CreateMenu(Localizer["wp_agent_menu_title"]);
-					if (agentsSelectionMenu == null) return;
+					if (agentsSelectionMenu == null)
+					{
+						player.Print(Localizer["wp_menu_unavailable"]);
+						return;
+					}
 					agentsSelectionMenu.PostSelectAction = PostSelectAction.Close;
 
 					var filteredAgents = AgentsList.Where(agentObject =>
@@ -770,13 +825,9 @@ public partial class WeaponPaints
 							agentsSelectionMenu.AddMenuOption(paintName, handleAgentSelection);
 					}
 
-					CommandsCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(Config.CmdRefreshCooldownSeconds);
+					MenuCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(1);
 					agentsSelectionMenu.Open(player);
 					return;
-				}
-				if (!string.IsNullOrEmpty(Localizer["wp_command_cooldown"]))
-				{
-					player.Print(Localizer["wp_command_cooldown"]);
 				}
 			});
 		}); 
@@ -785,7 +836,11 @@ public partial class WeaponPaints
 	private void SetupMusicMenu()
 	{
 		var musicSelectionMenu = Utility.CreateMenu(Localizer["wp_music_menu_title"]);
-		if (musicSelectionMenu == null) return;
+		if (musicSelectionMenu == null)
+		{
+			RegisterMenuUnavailable(_config.Additional.CommandMusic, "Music Menu");
+			return;
+		}
 		musicSelectionMenu.PostSelectAction = PostSelectAction.Close;
 
 		var handleMusicSelection = (CCSPlayerController? player, ChatMenuOption option) =>
@@ -902,17 +957,14 @@ public partial class WeaponPaints
 
 				if (player == null || player.UserId == null) return;
 
-				if (!CommandsCooldown.TryGetValue(player.Slot, out var cooldownEndTime) ||
-				    DateTime.UtcNow >= (CommandsCooldown.TryGetValue(player.Slot, out cooldownEndTime) ? cooldownEndTime : DateTime.UtcNow))
+				if (!MenuCooldown.TryGetValue(player.Slot, out var menuCooldownEnd) ||
+				    DateTime.UtcNow >= menuCooldownEnd)
 				{
-					CommandsCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(Config.CmdRefreshCooldownSeconds);
+					MenuCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(1);
 					musicSelectionMenu.Open(player);
 					return;
 				}
-				if (!string.IsNullOrEmpty(Localizer["wp_command_cooldown"]))
-				{
-					player.Print(Localizer["wp_command_cooldown"]);
-				}
+				// 1s menu cooldown: stay silent, the next key press succeeds.
 			});
 		});
 	}
@@ -920,7 +972,11 @@ public partial class WeaponPaints
 	private void SetupPinsMenu()
 	{
 		var pinsSelectionMenu = Utility.CreateMenu(Localizer["wp_pins_menu_title"]);
-		if (pinsSelectionMenu == null) return;
+		if (pinsSelectionMenu == null)
+		{
+			RegisterMenuUnavailable(_config.Additional.CommandPin, "Pins Menu");
+			return;
+		}
 		pinsSelectionMenu.PostSelectAction = PostSelectAction.Close;
 
 		var handlePinsSelection = (CCSPlayerController? player, ChatMenuOption option) =>
@@ -1037,18 +1093,15 @@ public partial class WeaponPaints
 
 				if (player == null || player.UserId == null) return;
 
-				if (!CommandsCooldown.TryGetValue(player.Slot, out var cooldownEndTime) ||
-				    DateTime.UtcNow >= (CommandsCooldown.TryGetValue(player.Slot, out cooldownEndTime) ? cooldownEndTime : DateTime.UtcNow))
+				if (!MenuCooldown.TryGetValue(player.Slot, out var menuCooldownEnd) ||
+				    DateTime.UtcNow >= menuCooldownEnd)
 				{
-					CommandsCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(Config.CmdRefreshCooldownSeconds);
+					MenuCooldown[player.Slot] = DateTime.UtcNow.AddSeconds(1);
 					pinsSelectionMenu.Open(player);
 					return;
 				}
 				
-				if (!string.IsNullOrEmpty(Localizer["wp_command_cooldown"]))
-				{
-					player.Print(Localizer["wp_command_cooldown"]);
-				}
+				// 1s menu cooldown: stay silent, the next key press succeeds.
 			});
 		});
 	}

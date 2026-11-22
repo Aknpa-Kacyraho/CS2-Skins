@@ -110,6 +110,9 @@ public partial class WeaponPaints
 	private readonly Dictionary<int, string> _playerWeaponImage = new();
 
 	private static readonly Dictionary<int, DateTime> CommandsCooldown = new();
+
+	// Menu opening has its own cooldown: opening a menu must not block !wp, and vice versa.
+	private static readonly Dictionary<int, DateTime> MenuCooldown = new();
 	internal static Database? Database;
 
 	private static readonly MemoryFunctionVoid<nint, string, float> CAttributeListSetOrAddAttributeValueByName = new(GameData.GetSignature("CAttributeList_SetOrAddAttributeValueByName"));

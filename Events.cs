@@ -126,6 +126,7 @@ namespace WeaponPaints
 			_temporaryPlayerWeaponWear.TryRemove(slot, out _);
 			_playerWeaponImage.Remove(slot);
 			CommandsCooldown.Remove(slot);
+			MenuCooldown.Remove(slot);
 			Players.Remove(player);
 
 			return HookResult.Continue;

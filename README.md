@@ -1060,10 +1060,18 @@ Change it in `WeaponPaints.json` if required.
 Current source version:
 
 ```text
-3.4.2
+3.5.0
 ```
 
 WeaponPaints checks the repository's `VERSION` file at runtime and logs whether the installed plugin is up to date, outdated or probably a development version.
+
+## Local UX changes (3.5.x)
+
+- Menu backend missing → commands reply with a clear message instead of doing nothing.
+- Skin submenu can return to the weapon list.
+- Menu cooldown and `!wp` cooldown are independent; refresh shows remaining seconds.
+- Chinese copy: 特工 (agents), 胸章 (pins), 已刷新 (refresh done).
+- `lang/en.json` carries the Chinese copy because CSS currently falls back to `en`.
 
 ## Local stability changes (3.4.x)
 
