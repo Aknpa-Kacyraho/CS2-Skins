@@ -1,5 +1,5 @@
 {
-	"wp_prefix": "{lightblue}[WeaponPaints] {default}",
+	"wp_prefix": "{lightblue}[武器涂装] {default}",
 	"wp_info_website": "访问 {lime}{0}{default}，您可以更改皮肤",
 	"wp_info_refresh": "输入 {lime}!wp{default} 同步选择的皮肤",
 	"wp_info_knife": "输入 {lime}!knife{default} 打开刀具菜单",
@@ -8,14 +8,14 @@
 	"wp_info_music": "输入 {lime}!music{default} 打开音乐菜单",
 	"wp_info_pin": "输入 {lime}!pins{default} 打开胸章菜单",
 	"wp_info_skins": "输入 {lime}!skins{default} 打开武器皮肤菜单",
-	"wp_info_stattrak": "输入 {lime}!stattrak{default} 开关 StatTrak",
-	"wp_info_help": "骰子插件帮助：{lime}!rtd help{default}",
+	"wp_info_stattrak": "输入 {lime}!stattrak{default} 开关 StatTrak 记录",
+	"wp_info_help": "更多命令：{lime}!knife{default} 刀具 / {lime}!gloves{default} 手套 / {lime}!skins{default} 皮肤",
 	"wp_info_status": "输入 {lime}!wp status{default} 查看当前装备",
 	"wp_command_cooldown": "{lightred}刷新冷却中：还需 {0} 秒",
 	"wp_command_refresh_done": "{lime}已刷新武器涂装",
 	"wp_menu_unavailable": "{lightred}菜单组件未加载，请联系管理员检查 MenuManagerCore。",
 	"wp_menu_back": "← 返回武器列表",
-	"wp_status_title": "{lightblue}[WeaponPaints] {default}当前装备：",
+	"wp_status_title": "{lightblue}[武器涂装] {default}当前装备：",
 	"wp_status_knife": "{default}  刀具：{lime}{0}",
 	"wp_status_glove": "{default}  手套：{lime}{0}",
 	"wp_status_agent": "{default}  特工：{lime}{0}",
@@ -37,7 +37,7 @@
 	"wp_skin_menu_weapon_title": "武器菜单",
 	"wp_skin_menu_skin_title": "选择 {lime}{0}{default} 的皮肤",
 	"wp_skin_menu_select": "您选择了 {lime}{0}{default} 作为您的皮肤（再次输入 !skins 可更换）",
-	"wp_stattrak_action": "已切换 StatTrak 设置",
+	"wp_stattrak_action": "已切换 StatTrak 记录状态",
 
 	"None": "无"
 }

@@ -4,7 +4,7 @@
         "weapon_name": "weapon_ak47",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_ak47.png",
-        "paint_name": "AK-47  | Default",
+        "paint_name": "AK-47 | 默认",
         "legacy_model": false
     },
     {
@@ -500,7 +500,7 @@
         "weapon_name": "weapon_aug",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_aug.png",
-        "paint_name": "AUG  | Default",
+        "paint_name": "AUG | 默认",
         "legacy_model": false
     },
     {
@@ -876,7 +876,7 @@
         "weapon_name": "weapon_awp",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_awp.png",
-        "paint_name": "AWP  | Default",
+        "paint_name": "AWP | 默认",
         "legacy_model": false
     },
     {
@@ -1300,7 +1300,7 @@
         "weapon_name": "weapon_bayonet",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_bayonet.png",
-        "paint_name": "刺刀（★）  | Default",
+        "paint_name": "刺刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -1580,7 +1580,7 @@
         "weapon_name": "weapon_bizon",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_bizon.png",
-        "paint_name": "PP-野牛  | Default",
+        "paint_name": "PP-野牛 | 默认",
         "legacy_model": false
     },
     {
@@ -1900,7 +1900,7 @@
         "weapon_name": "weapon_cz75a",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_cz75a.png",
-        "paint_name": "CZ75自动型  | Default",
+        "paint_name": "CZ75自动型 | 默认",
         "legacy_model": false
     },
     {
@@ -2204,7 +2204,7 @@
         "weapon_name": "weapon_deagle",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_deagle.png",
-        "paint_name": "沙漠之鹰  | Default",
+        "paint_name": "沙漠之鹰 | 默认",
         "legacy_model": false
     },
     {
@@ -2572,7 +2572,7 @@
         "weapon_name": "weapon_elite",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_elite.png",
-        "paint_name": "双持贝瑞塔  | Default",
+        "paint_name": "双持贝瑞塔 | 默认",
         "legacy_model": false
     },
     {
@@ -2924,7 +2924,7 @@
         "weapon_name": "weapon_famas",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_famas.png",
-        "paint_name": "法玛斯  | Default",
+        "paint_name": "法玛斯 | 默认",
         "legacy_model": false
     },
     {
@@ -3284,7 +3284,7 @@
         "weapon_name": "weapon_fiveseven",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_fiveseven.png",
-        "paint_name": "FN57  | Default",
+        "paint_name": "FN57 | 默认",
         "legacy_model": false
     },
     {
@@ -3628,7 +3628,7 @@
         "weapon_name": "weapon_g3sg1",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_g3sg1.png",
-        "paint_name": "G3SG1  | Default",
+        "paint_name": "G3SG1 | 默认",
         "legacy_model": false
     },
     {
@@ -3876,7 +3876,7 @@
         "weapon_name": "weapon_galilar",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_galilar.png",
-        "paint_name": "加利尔AR  | Default",
+        "paint_name": "加利尔AR | 默认",
         "legacy_model": false
     },
     {
@@ -4236,7 +4236,7 @@
         "weapon_name": "weapon_glock",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_glock.png",
-        "paint_name": "格洛克18型  | Default",
+        "paint_name": "格洛克18型 | 默认",
         "legacy_model": false
     },
     {
@@ -4716,7 +4716,7 @@
         "weapon_name": "weapon_hkp2000",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_hkp2000.png",
-        "paint_name": "P2000  | Default",
+        "paint_name": "P2000 | 默认",
         "legacy_model": false
     },
     {
@@ -5012,7 +5012,7 @@
         "weapon_name": "weapon_knife_butterfly",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_butterfly.png",
-        "paint_name": "蝴蝶刀（★）  | Default",
+        "paint_name": "蝴蝶刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -5292,7 +5292,7 @@
         "weapon_name": "weapon_knife_canis",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_canis.png",
-        "paint_name": "求生匕首（★）  | Default",
+        "paint_name": "求生匕首（★） | 默认",
         "legacy_model": false
     },
     {
@@ -5492,7 +5492,7 @@
         "weapon_name": "weapon_knife_cord",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_cord.png",
-        "paint_name": "系绳匕首（★）  | Default",
+        "paint_name": "系绳匕首（★） | 默认",
         "legacy_model": false
     },
     {
@@ -5692,7 +5692,7 @@
         "weapon_name": "weapon_knife_css",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_css.png",
-        "paint_name": "海豹短刀（★）  | Default",
+        "paint_name": "海豹短刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -5796,7 +5796,7 @@
         "weapon_name": "weapon_knife_falchion",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_falchion.png",
-        "paint_name": "弯刀（★）  | Default",
+        "paint_name": "弯刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -6076,7 +6076,7 @@
         "weapon_name": "weapon_knife_flip",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_flip.png",
-        "paint_name": "折叠刀（★）  | Default",
+        "paint_name": "折叠刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -6356,7 +6356,7 @@
         "weapon_name": "weapon_knife_gut",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_gut.png",
-        "paint_name": "穿肠刀（★）  | Default",
+        "paint_name": "穿肠刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -6636,7 +6636,7 @@
         "weapon_name": "weapon_knife_gypsy_jackknife",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_gypsy_jackknife.png",
-        "paint_name": "折刀（★）  | Default",
+        "paint_name": "折刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -6836,7 +6836,7 @@
         "weapon_name": "weapon_knife_karambit",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_karambit.png",
-        "paint_name": "爪子刀（★）  | Default",
+        "paint_name": "爪子刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -7116,7 +7116,7 @@
         "weapon_name": "weapon_knife_kukri",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_kukri.png",
-        "paint_name": "廓尔喀刀（★）  | Default",
+        "paint_name": "廓尔喀刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -7220,7 +7220,7 @@
         "weapon_name": "weapon_knife_m9_bayonet",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_m9_bayonet.png",
-        "paint_name": "M9 刺刀（★）  | Default",
+        "paint_name": "M9 刺刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -7500,7 +7500,7 @@
         "weapon_name": "weapon_knife_outdoor",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_outdoor.png",
-        "paint_name": "流浪者匕首（★）  | Default",
+        "paint_name": "流浪者匕首（★） | 默认",
         "legacy_model": false
     },
     {
@@ -7700,7 +7700,7 @@
         "weapon_name": "weapon_knife_push",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_push.png",
-        "paint_name": "暗影双匕（★）  | Default",
+        "paint_name": "暗影双匕（★） | 默认",
         "legacy_model": false
     },
     {
@@ -7980,7 +7980,7 @@
         "weapon_name": "weapon_knife_skeleton",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_skeleton.png",
-        "paint_name": "骷髅匕首（★）  | Default",
+        "paint_name": "骷髅匕首（★） | 默认",
         "legacy_model": false
     },
     {
@@ -8180,7 +8180,7 @@
         "weapon_name": "weapon_knife_stiletto",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_stiletto.png",
-        "paint_name": "短剑（★）  | Default",
+        "paint_name": "短剑（★） | 默认",
         "legacy_model": false
     },
     {
@@ -8380,7 +8380,7 @@
         "weapon_name": "weapon_knife_survival_bowie",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_survival_bowie.png",
-        "paint_name": "鲍伊猎刀（★）  | Default",
+        "paint_name": "鲍伊猎刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -8660,7 +8660,7 @@
         "weapon_name": "weapon_knife_tactical",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_tactical.png",
-        "paint_name": "猎杀者匕首（★）  | Default",
+        "paint_name": "猎杀者匕首（★） | 默认",
         "legacy_model": false
     },
     {
@@ -8940,7 +8940,7 @@
         "weapon_name": "weapon_knife_ursus",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_ursus.png",
-        "paint_name": "熊刀（★）  | Default",
+        "paint_name": "熊刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -9140,7 +9140,7 @@
         "weapon_name": "weapon_knife_widowmaker",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_knife_widowmaker.png",
-        "paint_name": "锯齿爪刀（★）  | Default",
+        "paint_name": "锯齿爪刀（★） | 默认",
         "legacy_model": false
     },
     {
@@ -9340,7 +9340,7 @@
         "weapon_name": "weapon_m249",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_m249.png",
-        "paint_name": "M249  | Default",
+        "paint_name": "M249 | 默认",
         "legacy_model": false
     },
     {
@@ -9556,7 +9556,7 @@
         "weapon_name": "weapon_m4a1",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_m4a1.png",
-        "paint_name": "M4A4  | Default",
+        "paint_name": "M4A4 | 默认",
         "legacy_model": false
     },
     {
@@ -9924,7 +9924,7 @@
         "weapon_name": "weapon_m4a1_silencer",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_m4a1_silencer.png",
-        "paint_name": "M4A1消音版  | Default",
+        "paint_name": "M4A1消音版 | 默认",
         "legacy_model": false
     },
     {
@@ -10356,7 +10356,7 @@
         "weapon_name": "weapon_mac10",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_mac10.png",
-        "paint_name": "MAC-10  | Default",
+        "paint_name": "MAC-10 | 默认",
         "legacy_model": false
     },
     {
@@ -10820,7 +10820,7 @@
         "weapon_name": "weapon_mag7",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_mag7.png",
-        "paint_name": "MAG-7  | Default",
+        "paint_name": "MAG-7 | 默认",
         "legacy_model": false
     },
     {
@@ -11124,7 +11124,7 @@
         "weapon_name": "weapon_mp5sd",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_mp5sd.png",
-        "paint_name": "MP5-SD  | Default",
+        "paint_name": "MP5-SD | 默认",
         "legacy_model": false
     },
     {
@@ -11324,7 +11324,7 @@
         "weapon_name": "weapon_mp7",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_mp7.png",
-        "paint_name": "MP7  | Default",
+        "paint_name": "MP7 | 默认",
         "legacy_model": false
     },
     {
@@ -11652,7 +11652,7 @@
         "weapon_name": "weapon_mp9",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_mp9.png",
-        "paint_name": "MP9  | Default",
+        "paint_name": "MP9 | 默认",
         "legacy_model": false
     },
     {
@@ -12036,7 +12036,7 @@
         "weapon_name": "weapon_negev",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_negev.png",
-        "paint_name": "内格夫  | Default",
+        "paint_name": "内格夫 | 默认",
         "legacy_model": false
     },
     {
@@ -12244,7 +12244,7 @@
         "weapon_name": "weapon_nova",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_nova.png",
-        "paint_name": "新星  | Default",
+        "paint_name": "新星 | 默认",
         "legacy_model": false
     },
     {
@@ -12628,7 +12628,7 @@
         "weapon_name": "weapon_p250",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_p250.png",
-        "paint_name": "P250  | Default",
+        "paint_name": "P250 | 默认",
         "legacy_model": false
     },
     {
@@ -13100,7 +13100,7 @@
         "weapon_name": "weapon_p90",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_p90.png",
-        "paint_name": "P90  | Default",
+        "paint_name": "P90 | 默认",
         "legacy_model": false
     },
     {
@@ -13524,7 +13524,7 @@
         "weapon_name": "weapon_revolver",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_revolver.png",
-        "paint_name": "R8左轮手枪  | Default",
+        "paint_name": "R8左轮手枪 | 默认",
         "legacy_model": false
     },
     {
@@ -13748,7 +13748,7 @@
         "weapon_name": "weapon_sawedoff",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_sawedoff.png",
-        "paint_name": "截短霰弹枪  | Default",
+        "paint_name": "截短霰弹枪 | 默认",
         "legacy_model": false
     },
     {
@@ -14044,7 +14044,7 @@
         "weapon_name": "weapon_scar20",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_scar20.png",
-        "paint_name": "SCAR-20  | Default",
+        "paint_name": "SCAR-20 | 默认",
         "legacy_model": false
     },
     {
@@ -14316,7 +14316,7 @@
         "weapon_name": "weapon_sg556",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_sg556.png",
-        "paint_name": "SG 553  | Default",
+        "paint_name": "SG 553 | 默认",
         "legacy_model": false
     },
     {
@@ -14628,7 +14628,7 @@
         "weapon_name": "weapon_ssg08",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_ssg08.png",
-        "paint_name": "SSG 08  | Default",
+        "paint_name": "SSG 08 | 默认",
         "legacy_model": false
     },
     {
@@ -14980,7 +14980,7 @@
         "weapon_name": "weapon_taser",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_taser.png",
-        "paint_name": "宙斯x27电击枪  | Default",
+        "paint_name": "宙斯x27电击枪 | 默认",
         "legacy_model": false
     },
     {
@@ -15044,7 +15044,7 @@
         "weapon_name": "weapon_tec9",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_tec9.png",
-        "paint_name": "Tec-9  | Default",
+        "paint_name": "Tec-9 | 默认",
         "legacy_model": false
     },
     {
@@ -15436,7 +15436,7 @@
         "weapon_name": "weapon_ump45",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_ump45.png",
-        "paint_name": "UMP-45  | Default",
+        "paint_name": "UMP-45 | 默认",
         "legacy_model": false
     },
     {
@@ -15804,7 +15804,7 @@
         "weapon_name": "weapon_usp_silencer",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_usp_silencer.png",
-        "paint_name": "USP消音版  | Default",
+        "paint_name": "USP消音版 | 默认",
         "legacy_model": false
     },
     {
@@ -16172,7 +16172,7 @@
         "weapon_name": "weapon_xm1014",
         "paint": 0,
         "image": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/weapon_xm1014.png",
-        "paint_name": "XM1014  | Default",
+        "paint_name": "XM1014 | 默认",
         "legacy_model": false
     },
     {

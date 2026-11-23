@@ -220,7 +220,7 @@ public partial class WeaponPaints
 	{
 		_config.Additional.CommandStattrak.ForEach(c =>
 		{
-			AddCommand($"css_{c}", "Stattrak toggle", (player, info) =>
+			AddCommand($"css_{c}", "切换 StatTrak", (player, info) =>
 			{
 				if (!Utility.IsPlayerValid(player)) return;
 
@@ -230,7 +230,7 @@ public partial class WeaponPaints
 
 		_config.Additional.CommandSkin.ForEach(c =>
 		{
-			AddCommand($"css_{c}", "Skins info", (player, info) =>
+			AddCommand($"css_{c}", "武器涂装信息", (player, info) =>
 			{
 				if (!Utility.IsPlayerValid(player)) return;
 				OnCommandWS(player, info);
@@ -239,7 +239,7 @@ public partial class WeaponPaints
 			
 		_config.Additional.CommandRefresh.ForEach(c =>
 		{
-			AddCommand($"css_{c}", "Skins refresh", (player, info) =>
+			AddCommand($"css_{c}", "刷新武器涂装", (player, info) =>
 			{
 				if (!Utility.IsPlayerValid(player)) return;
 				OnCommandRefresh(player, info);
@@ -250,7 +250,7 @@ public partial class WeaponPaints
 		{
 			_config.Additional.CommandKill.ForEach(c =>
 			{
-				AddCommand($"css_{c}", "kill yourself", (player, _) =>
+				AddCommand($"css_{c}", "自杀", (player, _) =>
 				{
 					if (player == null || !Utility.IsPlayerValid(player) || player.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
 
@@ -259,7 +259,7 @@ public partial class WeaponPaints
 			});
 		}
 
-		AddCommand("wp_refresh", "Admin refresh player skins", (player, info) =>
+		AddCommand("wp_refresh", "管理员刷新玩家涂装", (player, info) =>
 		{
 			OnCommandSkinRefresh(player, info);
 		});
@@ -277,10 +277,10 @@ public partial class WeaponPaints
 			
 		if (string.IsNullOrEmpty(args))
 		{
-			Console.WriteLine("[WeaponPaints] Usage: wp_refresh <steamid64|all>");
-			Console.WriteLine("[WeaponPaints] Examples:");
-			Console.WriteLine("[WeaponPaints]   wp_refresh all - Refresh skins for all players");
-			Console.WriteLine("[WeaponPaints]   wp_refresh 76561198012345678 - Refresh skins by SteamID64");
+			Console.WriteLine("[WeaponPaints] 用法：wp_refresh <steamid64|all>");
+			Console.WriteLine("[WeaponPaints] 示例：");
+			Console.WriteLine("[WeaponPaints]   wp_refresh all - 刷新所有玩家的涂装");
+			Console.WriteLine("[WeaponPaints]   wp_refresh 76561198012345678 - 按 SteamID64 刷新涂装");
 			return;
 		}
 
@@ -438,7 +438,7 @@ public partial class WeaponPaints
 		}
 		_config.Additional.CommandKnife.ForEach(c =>
 		{
-			AddCommand($"css_{c}", "Knife Menu", (player, _) =>
+			AddCommand($"css_{c}", "刀具菜单", (player, _) =>
 			{
 				if (!Utility.IsPlayerValid(player) || !_gBCommandsAllowed) return;
 				if (giveItemMenu == null)
@@ -468,7 +468,7 @@ public partial class WeaponPaints
 	{
 		// var classNamesByWeapon = WeaponList.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
 		var classNamesByWeapon = WeaponList
-			.Except([new KeyValuePair<string, string>("weapon_knife", "Default Knife")])
+			.Except([new KeyValuePair<string, string>("weapon_knife", "默认匕首")])
 			.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
 
 		var weaponSelectionMenu = Utility.CreateMenu(Localizer["wp_skin_menu_weapon_title"]);
@@ -617,7 +617,7 @@ public partial class WeaponPaints
 			
 		_config.Additional.CommandSkinSelection.ForEach(c =>
 		{
-			AddCommand($"css_{c}", "Skins selection menu", (player, _) =>
+			AddCommand($"css_{c}", "皮肤选择菜单", (player, _) =>
 			{
 				if (!Utility.IsPlayerValid(player)) return;
 
@@ -645,7 +645,7 @@ public partial class WeaponPaints
 		var glovesSelectionMenu = Utility.CreateMenu(Localizer["wp_glove_menu_title"]);
 		if (glovesSelectionMenu == null)
 		{
-			RegisterMenuUnavailable(_config.Additional.CommandGlove, "Gloves Menu");
+			RegisterMenuUnavailable(_config.Additional.CommandGlove, "手套菜单");
 			return;
 		}
 		glovesSelectionMenu.PostSelectAction = PostSelectAction.Close;
@@ -762,7 +762,7 @@ public partial class WeaponPaints
 		// Command to open the weapon selection menu for players
 		_config.Additional.CommandGlove.ForEach(c =>
 		{
-			AddCommand($"css_{c}", "Gloves selection menu", (player, info) =>
+			AddCommand($"css_{c}", "手套选择菜单", (player, info) =>
 			{
 				if (!Utility.IsPlayerValid(player) || !_gBCommandsAllowed) return;
 
@@ -857,7 +857,7 @@ public partial class WeaponPaints
 		// Command to open the weapon selection menu for players
 		_config.Additional.CommandAgent.ForEach(c =>
 		{
-			AddCommand($"css_{c}", "Agents selection menu", (player, info) =>
+			AddCommand($"css_{c}", "特工选择菜单", (player, info) =>
 			{
 				if (!Utility.IsPlayerValid(player) || !_gBCommandsAllowed) return;
 
@@ -909,7 +909,7 @@ public partial class WeaponPaints
 		var musicSelectionMenu = Utility.CreateMenu(Localizer["wp_music_menu_title"]);
 		if (musicSelectionMenu == null)
 		{
-			RegisterMenuUnavailable(_config.Additional.CommandMusic, "Music Menu");
+			RegisterMenuUnavailable(_config.Additional.CommandMusic, "音乐菜单");
 			return;
 		}
 		musicSelectionMenu.PostSelectAction = PostSelectAction.Close;
@@ -1022,7 +1022,7 @@ public partial class WeaponPaints
 		// Command to open the weapon selection menu for players
 		_config.Additional.CommandMusic.ForEach(c =>
 		{
-			AddCommand($"css_{c}", "Music selection menu", (player, info) =>
+			AddCommand($"css_{c}", "音乐选择菜单", (player, info) =>
 			{
 				if (!Utility.IsPlayerValid(player) || !_gBCommandsAllowed) return;
 
@@ -1045,7 +1045,7 @@ public partial class WeaponPaints
 		var pinsSelectionMenu = Utility.CreateMenu(Localizer["wp_pins_menu_title"]);
 		if (pinsSelectionMenu == null)
 		{
-			RegisterMenuUnavailable(_config.Additional.CommandPin, "Pins Menu");
+			RegisterMenuUnavailable(_config.Additional.CommandPin, "胸章菜单");
 			return;
 		}
 		pinsSelectionMenu.PostSelectAction = PostSelectAction.Close;
@@ -1158,7 +1158,7 @@ public partial class WeaponPaints
 		// Command to open the weapon selection menu for players
 		_config.Additional.CommandPin.ForEach(c =>
 		{
-			AddCommand($"css_{c}", "Pin selection menu", (player, info) =>
+			AddCommand($"css_{c}", "胸章选择菜单", (player, info) =>
 			{
 				if (!Utility.IsPlayerValid(player) || !_gBCommandsAllowed) return;
 
